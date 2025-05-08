@@ -1,0 +1,71 @@
+---
+import { supabase } from '../lib/supabaseClient';
+import Section from './Section.astro';
+import FormattedDate from './FormattedDate.astro';
+
+// Fetch recent links from Supabase
+// Limit to 5 recent links
+const { data: links, error } = await supabase
+  .from('links')
+  .select('slug, original, created_at')
+  .order('created_at', { ascending: false })
+  .limit(5);
+
+const siteUrl = import.meta.env.SITE || 'https://notshort.in';
+---
+
+<Section variant="light">
+  <div class="mb-8">
+    <h2 class="title">Recently Longified Links</h2>
+    <p class="subtitle-small">Witness the magnificent URLs we've made worse.</p>
+  </div>
+  
+  {links && links.length > 0 ? (
+    <div class="overflow-x-auto w-full">
+      <table class="w-full border-collapse font-mono">
+        <thead>
+          <tr class="border-b-1 border-gray-200 dark:border-gray-700">
+            <th class="py-3 px-4 text-left text-sm text-gray-600 dark:text-gray-300">Original URL</th>
+            <th class="py-3 px-4 text-left text-sm text-gray-600 dark:text-gray-300">Long URL</th>
+            <th class="py-3 px-4 text-left text-sm text-gray-600 dark:text-gray-300">Created</th>
+          </tr>
+        </thead>
+        <tbody>
+          {links.map((link) => (
+            <tr class="border-b-1 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+              <td class="py-4 px-4">
+                <div class="flex items-center">
+                  <div class="truncate max-w-[200px]">
+                    <a href={link.original} target="_blank" rel="noopener noreferrer" class="text-gray-800 dark:text-gray-200 hover:underline truncate">
+                      {link.original}
+                    </a>
+                  </div>
+                </div>
+              </td>
+              <td class="py-4 px-4">
+                <div class="flex items-center">
+                  <div class="truncate max-w-[300px]">
+                    <a href={`${siteUrl}/${link.slug}`} target="_blank" rel="noopener noreferrer" class="text-gray-800 dark:text-gray-200 hover:underline truncate">
+                      {`${siteUrl}/${link.slug}`}
+                    </a>
+                  </div>
+                </div>
+              </td>
+              <td class="py-4 px-4 text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                <FormattedDate date={new Date(link.created_at)} />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  ) : error ? (
+    <div class="text-center py-10">
+      <p class="text-red-500">Error loading recent links. Please try again later.</p>
+    </div>
+  ) : (
+    <div class="text-center py-10">
+      <p class="text-gray-500 dark:text-gray-400">No links have been longified yet. Be the first!</p>
+    </div>
+  )}
+</Section>

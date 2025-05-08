@@ -6,5 +6,7 @@ import icon from 'astro-icon';
 
 // https://astro.build/config
 export default defineConfig({
-    integrations: [Unocss({ injectReset: true, injectEntry: true }), icon()]
+  site: 'https://notshort.in',
+  output: "server",
+  integrations: [Unocss({ injectReset: true, injectEntry: true }), icon()]
 });

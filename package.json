@@ -1,5 +1,5 @@
 {
-  "name": "notshort",
+  "name": "",
   "type": "module",
   "version": "0.5.0",
   "scripts": {
@@ -11,11 +11,15 @@
   },
   "dependencies": {
     "@astrojs/check": "^0.9.4",
+    "@supabase/ssr": "^0.6.1",
+    "@supabase/supabase-js": "^2.49.4",
     "astro": "^5.7.11",
     "astro-icon": "^1.1.1",
+    "nanoid": "^5.1.5",
     "typescript": "^5.6.2"
   },
   "devDependencies": {
+    "@unocss/astro": "^66.1.1",
     "@unocss/reset": "^0.63.1",
     "unocss": "^0.63.1"
   },

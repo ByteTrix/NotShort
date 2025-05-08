@@ -1,0 +1,88 @@
+---
+import { supabase } from '../lib/supabaseClient';
+import Layout from '../layouts/Layout.astro';
+
+// Get the slug from the URL
+const { slug } = Astro.params;
+const { request } = Astro;
+
+// Parse request headers for analytics
+const userAgent = request.headers.get('user-agent') || '';
+const referer = request.headers.get('referer') || '';
+const forwarded = request.headers.get('x-forwarded-for') || '';
+const ipAddress = forwarded.split(',')[0].trim() || request.headers.get('cf-connecting-ip') || '';
+
+// Redirect function for client-side navigation
+let redirectUrl = '';
+let notFound = false;
+let linkId: string | null = null;
+
+if (slug) {
+  // Query the database for the original URL
+  const { data, error } = await supabase
+    .from('links')
+    .select('id, original')
+    .eq('slug', slug)
+    .single();
+  
+  if (error || !data) {
+    notFound = true;
+  } else {
+    redirectUrl = data.original;
+    linkId = data.id;
+    
+    // Record click event
+    if (linkId) {
+      const { error: clickError } = await supabase
+        .from('click_events')
+        .insert([
+          { 
+            link_id: linkId,
+            user_agent: userAgent,
+            referrer: referer,
+            ip_address: ipAddress
+          }
+        ]);
+      
+      if (clickError) {
+        console.error('Error recording click event:', clickError);
+      }
+    }
+  }
+}
+---
+
+<Layout title={notFound ? "Link Not Found - notshort" : "Redirecting - notshort"}>
+  <div class="flex flex-col items-center justify-center min-h-screen p-6">
+    {notFound ? (
+      <div class="text-center">
+        <h1 class="text-4xl font-bold mb-6">404: Link Not Found</h1>
+        <p class="mb-8 max-w-md mx-auto">
+          The unnecessarily long URL you're trying to access doesn't exist. Perhaps it was too long even for us?
+        </p>
+        <a href="/" class="bg-gray-800 text-white px-6 py-3 inline-block font-mono hover:bg-gray-700">
+          Go Home
+        </a>
+      </div>
+    ) : (
+      <div class="text-center">
+        <h1 class="text-3xl font-bold mb-6">Redirecting you now...</h1>
+        <p class="mb-8 max-w-md mx-auto">
+          You're being redirected to the original URL. If you're not redirected within 3 seconds, click the button below.
+        </p>
+        <a href={redirectUrl} class="bg-gray-800 text-white px-6 py-3 inline-block font-mono hover:bg-gray-700">
+          Continue to Destination
+        </a>
+      </div>
+    )}
+  </div>
+</Layout>
+
+<script define:vars={{ redirectUrl, notFound }}>
+  // Only redirect if we have a valid URL
+  if (redirectUrl && !notFound) {
+    setTimeout(() => {
+      window.location.href = redirectUrl;
+    }, 3000);
+  }
+</script>
