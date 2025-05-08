@@ -95,7 +95,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     }
     
     // Generate the long URL
-    const longUrl = `${import.meta.env.SITE || 'https://notshort.in'}/${slug}`;
+    const longUrl = `${import.meta.env.SITE || 'https://kavinthangavel.com'}/${slug}`;
     
     // Return the longified URL
     return new Response(
