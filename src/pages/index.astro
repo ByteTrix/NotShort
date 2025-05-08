@@ -17,11 +17,19 @@ const projects = await getCollection('projects');
 
 <Layout title="NotShort – A Parody Link Longner">
   <Header gridBg>
-    <small class="small text-xs">The only site that makes your links longer, not shorter!</small>
-    <h2 class="text-4xl font-mono font-bold mb-3 ma-3">NotShort</h2>
-    <p class="subtitle text-base max-w-md mx-auto mt-2 mb-4">Welcome to notshort, the world's best parody of a link shortener. We take your short links and make them as long and ridiculous as possible. Why be short when you can be notshort?</p>
-    <div class="mt-6">
-      <LongifyForm />
+    <div class="text-center py-12 md:py-35"> {/* Added padding for better spacing */}
+      <p class="font-mono text-sm text-gray-600 dark:text-gray-400 mb-2"> {/* Adjusted tagline styling */}
+        The only site that makes your links longer, not shorter!
+      </p>
+      <h1 class="text-6xl md:text-7xl font-serif font-bold mb-6 text-gray-900 dark:text-white"> {/* Larger, serif font for title */}
+        NotShort
+      </h1>
+      <p class="text-lg text-gray-700 dark:text-gray-300 max-w-xl mx-auto mb-8"> {/* Slightly larger subtitle */}
+        Welcome to the world's best parody of a link shortener. We take your short links and make them as long and ridiculous as possible. Why be short when you can be notshort? (🥳 Get it ? "NotShort")
+      </p>
+      <div class="mt-10 max-w-lg mx-auto"> {/* Added max-width to form container */}
+        <LongifyForm />
+      </div>
     </div>
   </Header>
   
@@ -33,14 +41,19 @@ const projects = await getCollection('projects');
     
     <!-- Stats Grid with real statistics -->
     <Section fullWidthBorder={false}>
-      <h2 class="text-xl my-10 text-center">Making URLs longer for internet users worldwide. Because sometimes, more is more!</h2>
+      <div class="text-center py-8"> {/* Added padding */}
+        <h2 class="title mb-4">Our Global Impact on URL Verbosity</h2> {/* More "corporate" heading */}
+        <p class="subtitle-small max-w-2xl mx-auto">
+          Witness the staggering growth of unnecessarily elongated links across the digital expanse. We're revolutionizing inefficiency, one character at a time.
+        </p> {/* Humorous sub-description */}
+      </div>
     </Section>
     <StatsGrid entryName='downloads' />
     
     <SectionSpacer size="md" />
     
     <!-- GitHub Contributors Section -->
-    <Section index source="contributors" fullWidthBorder variant="dark">
+    <Section index source="contributors.md" fullWidthBorder variant="dark">
       <div class="lg:w-[70%] md:w-[80%] mx-auto">
         <h2 class="title mb-8">Our Confused Contributors</h2>
         <p class="subtitle-small mb-8">These brave souls write code that makes URLs longer instead of shorter. They still don't understand the assignment.</p>
@@ -59,10 +72,8 @@ const projects = await getCollection('projects');
         </div> -->
         
         <div class="text-center mt-8">
-          <!-- <a href={getRepoUrl()} target="_blank" rel="noopener noreferrer"  -->
-             class="inline-block longify-btn relative overflow-hidden fw-bold bg-gray-900 hover:bg-gray-800 c-gray-100 text-5 text-center py-4 px-8 transition-all duration-300 transform hover:scale-[1.02]">
-            <span class="relative z-10">View All Contributors</span>
-            <span class="btn-bg absolute inset-0 w-full h-full transform scale-x-0 origin-left transition-transform duration-500"></span>
+          <a href="#" class="longify-btn"> {/* Placeholder href */}
+            <span class="relative z-10">View All Contributors</span> {/* Wrap text in span */}
           </a>
         </div>
       </div>
@@ -86,10 +97,8 @@ const projects = await getCollection('projects');
       <div class="grid lg:grid-cols-[4fr_1fr] place-items-center gap-5">
         <h2 class="text-pretty title text-8 leading-8 font-bold c-gray-800 dark:c-gray-100">Want to contribute to the URL longification revolution?<br/><span class="c-gray-500 dark:c-gray-300 text-[0.9em]">Check out our unnecessarily complicated GitHub repository.</span></h2>
         <div>
-          <!-- <a href={getRepoUrl()} target="_blank" rel="noopener noreferrer"  -->
-             class="longify-btn relative overflow-hidden block fw-bold bg-gray-800 hover:bg-gray-700 c-gray-100 text-5 text-center py-4 px-7 transition-all duration-300 transform hover:scale-[1.02]">
-            <span class="relative z-10">Visit Repo</span>
-            <span class="btn-bg absolute inset-0 w-full h-full transform scale-x-0 origin-left transition-transform duration-500"></span>
+          <a href="#" class="longify-btn"> {/* Placeholder href */}
+            <span class="relative z-10">Visit Repo</span> {/* Wrap text in span */}
           </a>
         </div>
       </div>
@@ -99,14 +108,16 @@ const projects = await getCollection('projects');
     
     <!-- Why Choose NotShort Section -->
     <Section variant="dark" index source="statement.md" fullWidthBorder>
-      <div class="lg:w-[60%] md:w-[70%] mx-auto">
-        <h2 class="title">Why Choose notshort?</h2>
-        <p class="subtitle-small">We're committed to making the internet worse, one URL at a time. Our longification technology is state-of-the-art.</p>
-        <ul class="flex flex-col gap-row-3 mt-3 subtitle-small">
-          <li><strong class="text-[1.2em]">Complexity:</strong> We add unnecessary parameters and path segments to every URL.</li>
-          <li><strong class="text-[1.2em]">Inefficiency:</strong> We guarantee at least 500% increase in character count.</li>
-          <li><strong class="text-[1.2em]">Confusion:</strong> Your recipients won't know what hit them when they see your URLs.</li>
-          <li><strong class="text-[1.2em]">Anti-Productivity:</strong> Waste time with our service that actively makes sharing links harder.</li>
+      <div class="text-center py-12 md:py-16"> {/* Added padding and text-center */}
+        <h2 class="title mb-4">Why Choose NotShort?</h2>
+        <p class="subtitle-small max-w-2xl mx-auto mb-8">
+          Tired of short, boring links? So are we! NotShort is the revolutionary service you never knew you needed, dedicated to making your web addresses impressively long and confusing.
+        </p>
+        <ul class="text-left max-w-md mx-auto space-y-3 text-gray-300"> {/* Centered list, adjusted spacing */}
+          <li><strong class="font-semibold text-white">More Characters, More Fun:</strong> We add tons of extra letters, numbers, and dashes. Because why not?</li>
+          <li><strong class="font-semibold text-white">Guaranteed Slowdown:</strong> Sharing links takes longer. Perfect for avoiding actual work.</li>
+          <li><strong class="font-semibold text-white">Confuse Your Friends:</strong> Send links that look important (but probably aren't).</li>
+          <li><strong class="font-semibold text-white">Totally Pointless:</strong> It's the core feature! Embrace the absurdity.</li>
         </ul>
       </div>
     </Section>
@@ -114,14 +125,51 @@ const projects = await getCollection('projects');
 </Layout>
 
 <style>
-  .btn-bg {
+  .longify-btn {
+    display: inline-block;
+    position: relative;
+    padding: 0.75rem 1.5rem; /* 12px 24px */
+    font-weight: bold; /* fw-bold */
+    color: #E5E7EB; /* c-gray-100 / text-gray-200 approx */
+    background-color: #1F2937; /* bg-gray-800 */
+    text-align: center;
+    border-radius: 0.375rem; /* rounded-md */
+    overflow: hidden;
+    transition: color 0.3s ease, transform 0.2s ease;
+    transform-origin: center;
+  }
+
+  .longify-btn::before { /* Replaces btn-bg span */
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     background: linear-gradient(90deg, #3B82F6 0%, #8B5CF6 100%);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1); /* Smoother transition */
+    z-index: 0;
+  }
+
+  .longify-btn:hover {
+    color: white; /* Ensure text is visible on gradient */
+    transform: scale(1.03); /* Subtle scale on hover */
+  }
+
+  .longify-btn:hover::before {
+    transform: scaleX(1);
   }
   
-  .longify-btn:hover .btn-bg {
-    transform: scale-x-100;
+  .longify-btn span { /* If you keep the span structure */
+    position: relative;
+    z-index: 1;
   }
-  
+
+  /* If you remove the inner spans and just put text in <a> */
+  /* .longify-btn { z-index: 1; } ensure text is above ::before */
+
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }

@@ -3,6 +3,12 @@ import { supabase } from '../lib/supabaseClient';
 import Section from './Section.astro';
 import FormattedDate from './FormattedDate.astro';
 
+interface RecentLink {
+  slug: string;
+  original: string;
+  created_at: string;
+}
+
 // Fetch recent links from Supabase
 // Limit to 5 recent links
 const { data: links, error } = await supabase
@@ -22,36 +28,32 @@ const siteUrl = import.meta.env.SITE || 'https://notshort.in';
   
   {links && links.length > 0 ? (
     <div class="overflow-x-auto w-full">
-      <table class="w-full border-collapse font-mono">
-        <thead>
-          <tr class="border-b-1 border-gray-200 dark:border-gray-700">
-            <th class="py-3 px-4 text-left text-sm text-gray-600 dark:text-gray-300">Original URL</th>
-            <th class="py-3 px-4 text-left text-sm text-gray-600 dark:text-gray-300">Long URL</th>
-            <th class="py-3 px-4 text-left text-sm text-gray-600 dark:text-gray-300">Created</th>
+      <table class="w-full border-collapse font-mono text-sm"> {/* Base font size */}
+        <thead class="bg-gray-100 dark:bg-gray-800"> {/* Header background */}
+          <tr> {/* Removed border from tr, will apply to th */}
+            <th class="py-3 px-6 text-left font-semibold text-gray-700 dark:text-gray-200 border-b-2 border-gray-200 dark:border-gray-700">Original URL</th> {/* Increased padding, bolder, border */}
+            <th class="py-3 px-6 text-left font-semibold text-gray-700 dark:text-gray-200 border-b-2 border-gray-200 dark:border-gray-700">Long URL</th>
+            <th class="py-3 px-6 text-left font-semibold text-gray-700 dark:text-gray-200 border-b-2 border-gray-200 dark:border-gray-700">Created</th>
           </tr>
         </thead>
         <tbody>
-          {links.map((link) => (
-            <tr class="border-b-1 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-              <td class="py-4 px-4">
-                <div class="flex items-center">
-                  <div class="truncate max-w-[200px]">
-                    <a href={link.original} target="_blank" rel="noopener noreferrer" class="text-gray-800 dark:text-gray-200 hover:underline truncate">
-                      {link.original}
-                    </a>
-                  </div>
+          {(links as RecentLink[]).map((link: RecentLink) => (
+            <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"> {/* Adjusted hover */}
+              <td class="py-4 px-6 align-middle"> {/* Increased padding, vertical align */}
+                <div class="truncate max-w-[250px]"> {/* Slightly increased max-width */}
+                  <a href={link.original} target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline truncate" title={link.original}> {/* Consistent link color, added title */}
+                    {link.original}
+                  </a>
                 </div>
               </td>
-              <td class="py-4 px-4">
-                <div class="flex items-center">
-                  <div class="truncate max-w-[300px]">
-                    <a href={`${siteUrl}/${link.slug}`} target="_blank" rel="noopener noreferrer" class="text-gray-800 dark:text-gray-200 hover:underline truncate">
-                      {`${siteUrl}/${link.slug}`}
-                    </a>
-                  </div>
+              <td class="py-4 px-6 align-middle">
+                 <div class="truncate max-w-[350px]"> {/* Slightly increased max-width */}
+                  <a href={`${siteUrl}/${link.slug}`} target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline truncate" title={`${siteUrl}/${link.slug}`}> {/* Consistent link color, added title */}
+                    {`${siteUrl}/${link.slug}`}
+                  </a>
                 </div>
               </td>
-              <td class="py-4 px-4 text-gray-600 dark:text-gray-400 whitespace-nowrap">
+              <td class="py-4 px-6 text-gray-600 dark:text-gray-400 whitespace-nowrap align-middle">
                 <FormattedDate date={new Date(link.created_at)} />
               </td>
             </tr>
