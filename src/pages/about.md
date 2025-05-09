@@ -6,6 +6,24 @@ Firstly, thank you for checking this template out. This is the end of a weekend 
 
 The secondary goal of this template was to be something a developer could pick up and edit to fit their needs easily. It stays as close to Astro practices as possible, doesn't include unnecessary plugins or build processes. If you build sites with Astro and use any of the official templates as a base, this should be familiar to work in.
 
+## Link Policy {#link-policy}
+
+At NotShort, we use a unique approach to URL management:
+
+1. **One Original URL, One Long URL**: To conserve resources on our Supabase free tier and ensure system efficiency, each original URL can only have one corresponding longified version.
+
+2. **Shared Resources**: If you attempt to create a long URL for a link that's already in our system, you'll be provided with the existing long URL rather than creating a duplicate.
+
+3. **User Attribution**: When you encounter an existing long URL, we'll show you who originally created it to maintain transparency.
+
+4. **Why This Approach?**: This policy helps us:
+   - Reduce database load and storage requirements
+   - Maintain consistent link references
+   - Prevent spam and misuse
+   - Keep the service free for everyone
+
+We believe this approach offers the best balance between usability and sustainability for our parody link service.
+
 ## The exceptions
 
 Let's go over the shortcuts that have been created.

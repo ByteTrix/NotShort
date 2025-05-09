@@ -17,18 +17,17 @@ const posts = await getCollection('posts');
         <h2 class="text-8 leading-[1.2] lg:text-16 c-gray-600">{subtitle}</h2>
     </Header>
     <main>
-        <Section fullWidthBorder>
-            <ul class="ignore-content-container">
+        <Section fullWidthBorder>            <ul class="ignore-content-container">
                 {posts.map(async ({ slug, data }) => {
-                    const author = await getEntry('authors', data.author.id);
+                    const author = data.author?.id ? await getEntry('authors', data.author.id) : null;
                     return <li>
                         <article class="relative p-12.5 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
                             <h2 class="title">{data.title}</h2>
                             <FormattedDate date={data.pubDate} /><br/>
                             {data.description && <p class="subtitle">{data.description}</p>}
-                            <small class="small">Written by {author.data.name}</small>
+                            <small class="small">Written by {author?.data?.name || 'Unknown Author'}</small>
                             <a href={`/blog/${slug}`} class="after:content-[''] after:absolute after:inset-0">
-                                <span class="sr-only">Read the {data.type} {data.title}</span>
+                                <span class="sr-only">Read the {data.type || 'post'} {data.title}</span>
                             </a>
                         </article>
                     </li>
