@@ -13,6 +13,9 @@ if (authResult instanceof Response) {
 
 // Now we can be certain we have a session
 const session = authResult.session;
+if (!session) {
+  return Astro.redirect('/login');
+}
 ---
 
 <DashboardLayout title="Create Link - notshort">

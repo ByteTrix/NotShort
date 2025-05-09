@@ -8,10 +8,19 @@ import { createSupabaseServerClient } from './supabaseClient';
  */
 export async function requireAuth(Astro: AstroGlobal) {
   console.log(`[authMiddleware] requireAuth function CALLED for path: ${Astro.url.pathname}`);
-  const supabase = createSupabaseServerClient(Astro.cookies);
-  console.log(`[authMiddleware] Supabase client CREATED for path: ${Astro.url.pathname}. Attempting to get session...`);
+  const supabase = createSupabaseServerClient(Astro.cookies);  console.log(`[authMiddleware] Supabase client CREATED for path: ${Astro.url.pathname}. Authenticating user...`);
+  
+  // First verify the user authentication with getUser() which validates with the auth server
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  
+  if (userError) {
+    console.error('[authMiddleware] Error authenticating user:', userError.message, userError);
+    return Astro.redirect(`/login?error=auth_error&details=${encodeURIComponent(userError.message)}`);
+  }
+  
+  // If user is authenticated, we can safely get the session
   const { data, error } = await supabase.auth.getSession();
-
+  
   if (error) {
     console.error('[authMiddleware] Error getting session:', error.message, error);
     return Astro.redirect(`/login?error=session_error&details=${encodeURIComponent(error.message)}`);

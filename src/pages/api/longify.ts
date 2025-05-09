@@ -29,6 +29,24 @@ function generateLongSlug(): string {
 export const POST: APIRoute = async ({ request, cookies }) => {
   const supabase = createSupabaseServerClient(cookies);
   try {
+    // Get and authenticate the user more securely using getUser() instead of getSession()
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError) {
+      console.error('Error authenticating user in /api/longify:', userError);
+      return new Response(JSON.stringify({ error: 'Authentication error.' }), { status: 500 });
+    }
+    
+    // Require authentication - only logged in users can create links
+    if (!user) {
+      return new Response(
+        JSON.stringify({
+          error: 'Authentication required. Please log in to create links.'
+        }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+    
     // Parse the incoming JSON request
     const { url, title, isPublic = true } = await request.json();
     
@@ -52,31 +70,19 @@ export const POST: APIRoute = async ({ request, cookies }) => {
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
-    
-    // Generate a long slug for our parody service
+      // Generate a long slug for our parody service
     const slug = generateLongSlug();
-    
-    // Check if user is authenticated
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-    if (sessionError) {
-      console.error('Error getting session in /api/longify:', sessionError);
-      return new Response(JSON.stringify({ error: 'Authentication error while trying to get session.' }), { status: 500 });
-    }
+      // Already checked authentication at the start, so we know user exists
     
     // Prepare the link data
-    const linkData: any = { // Use 'any' for now or define a proper type
+    const linkData = {
       slug,
       original: url,
       created_at: new Date().toISOString(),
       title: title || null,
-      is_public: isPublic
+      is_public: isPublic,
+      user_id: user.id // Always add user_id since we require authentication
     };
-    
-    // Add user_id if the user is authenticated
-    if (session?.user) {
-      linkData.user_id = session.user.id;
-    }
     
     // Store the URL mapping in Supabase
     const { data, error } = await supabase

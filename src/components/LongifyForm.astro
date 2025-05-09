@@ -62,8 +62,7 @@
       const url = urlInput.value.trim();
       
       if (!url) return;
-      
-      try {
+        try {
         // Call the longify API endpoint
         const response = await fetch('/api/longify', {
           method: 'POST',
@@ -75,6 +74,12 @@
         
         if (!response.ok) {
           const errorData = await response.json();
+          // If user is not authenticated, redirect to login page
+          if (response.status === 401) {
+            const loginUrl = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+            window.location.href = loginUrl;
+            return;
+          }
           throw new Error(errorData.error || 'Failed to create long URL');
         }
         
