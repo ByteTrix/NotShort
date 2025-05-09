@@ -1,0 +1,361 @@
+---
+export const prerender = false;
+import DashboardLayout from '../../../layouts/DashboardLayout.astro';
+import { supabase } from '../../../lib/supabaseClient';
+import { requireAuth } from '../../../lib/authMiddleware';
+
+// Check authentication first
+const authResult = await requireAuth(Astro);
+
+if (authResult instanceof Response) {
+  return authResult; // This is a redirect
+}
+
+// Now we can be certain we have a session
+const session = authResult.session;
+if (!session) {
+  return Astro.redirect('/login');
+}
+const userId = session.user.id;
+
+// Get link ID from params
+const { id } = Astro.params;
+
+// Fetch link data
+const { data: link, error } = await supabase
+  .from('links')
+  .select('*')
+  .eq('id', id)
+  .eq('user_id', userId)
+  .single();
+
+// If link doesn't exist or doesn't belong to user, redirect to links page
+if (error || !link) {
+  return Astro.redirect('/dashboard/links');
+}
+
+// Fetch click analytics 
+const { data: clickEvents, error: clickError } = await supabase
+  .from('click_events')
+  .select('*')
+  .eq('link_id', id)
+  .order('clicked_at', { ascending: false })
+  .limit(50);
+
+// Site URL for generating full links
+const siteUrl = import.meta.env.SITE || 'https://kavinthangavel.com';
+const longUrl = `${siteUrl}/${link.slug}`;
+---
+
+<DashboardLayout title="Edit Link - notshort">
+  <div>
+    <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-white sm:truncate sm:text-3xl sm:tracking-tight">
+      Edit Link
+    </h2>
+    <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
+      Modify your unnecessarily long URL settings
+    </p>
+  </div>
+  
+  <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
+    <!-- Link Edit Form -->
+    <div class="lg:col-span-2">
+      <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+        <form id="edit-link-form" class="space-y-6">
+          <input type="hidden" id="link-id" value={id} />
+          
+          <!-- Original URL (readonly) -->
+          <div>
+            <label for="original" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Original URL
+            </label>
+            <div class="mt-1 flex rounded-md shadow-sm">
+              <input
+                type="url"
+                name="original"
+                id="original"
+                readonly
+                value={link.original}
+                class="block w-full rounded-md border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 shadow-sm sm:text-sm dark:text-gray-300 py-2 px-3"
+              />
+              <button 
+                type="button" 
+                id="copy-original-btn"
+                class="ml-3 inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-700 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
+                data-copy-text={link.original}
+              >
+                Copy
+              </button>
+            </div>
+          </div>
+          
+          <!-- Long URL (readonly) -->
+          <div>
+            <label for="long-url" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Long URL
+            </label>
+            <div class="mt-1 flex rounded-md shadow-sm">
+              <input
+                type="url"
+                name="long-url"
+                id="long-url"
+                readonly
+                value={longUrl}
+                class="block w-full rounded-md border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 shadow-sm sm:text-sm dark:text-gray-300 py-2 px-3"
+              />
+              <button 
+                type="button" 
+                id="copy-long-btn"
+                class="ml-3 inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-700 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
+                data-copy-text={longUrl}
+              >
+                Copy
+              </button>
+            </div>
+          </div>
+          
+          <!-- Title -->
+          <div>
+            <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Title
+            </label>
+            <div class="mt-1">
+              <input
+                type="text"
+                name="title"
+                id="title"
+                value={link.title || ''}
+                placeholder="My awesome link"
+                class="block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:bg-gray-800 dark:text-white py-2 px-3"
+              />
+            </div>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              A friendly name to help you identify this link
+            </p>
+          </div>
+          
+          <!-- Privacy Setting -->
+          <div>
+            <div class="flex items-center">
+              <input
+                id="is_public"
+                name="is_public"
+                type="checkbox"
+                checked={link.is_public}
+                class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800"
+              />
+              <label for="is_public" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                Make this link public
+              </label>
+            </div>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              Public links can be accessed by anyone. Private links are only visible to you.
+            </p>
+          </div>
+          
+          <!-- Submit Button -->
+          <div class="flex justify-end">
+            <a href="/dashboard/links" class="rounded-md bg-white dark:bg-gray-700 py-2 px-4 text-sm font-medium text-gray-700 dark:text-gray-200 shadow-sm border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 mr-3">
+              Cancel
+            </a>
+            <button
+              type="submit"
+              class="rounded-md bg-gray-800 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+            >
+              Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <!-- Statistics Sidebar -->
+    <div>
+      <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Link Statistics</h3>
+        
+        <dl class="grid grid-cols-1 gap-4">
+          <div class="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg">
+            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Clicks</dt>
+            <dd class="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">{link.clicks || 0}</dd>
+          </div>
+          
+          <div class="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg">
+            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Created</dt>
+            <dd class="mt-1 text-base text-gray-900 dark:text-white">
+              {new Date(link.created_at).toLocaleDateString()}
+            </dd>
+          </div>
+          
+          <div class="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg">
+            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Status</dt>
+            <dd class="mt-1">
+              <span class={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${link.is_public ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'}`}>
+                {link.is_public ? 'Public' : 'Private'}
+              </span>
+            </dd>
+          </div>
+        </dl>
+        
+        <div class="mt-6">
+          <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Danger Zone</h4>
+          <button
+            id="delete-btn"
+            class="inline-flex items-center px-3 py-2 border border-red-300 dark:border-red-700 rounded-md shadow-sm text-sm font-medium text-red-700 dark:text-red-400 bg-white dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-900/20"
+            data-link-id={id}
+          >
+            Delete this link
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Recent Click Events -->
+  {clickEvents && clickEvents.length > 0 && (
+    <div class="mt-8">
+      <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Recent Click Events</h3>
+      
+      <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
+        <table class="min-w-full divide-y divide-gray-300 dark:divide-gray-700">
+          <thead class="bg-gray-50 dark:bg-gray-800">
+            <tr>
+              <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-white sm:pl-6">Date & Time</th>
+              <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">Referrer</th>
+              <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">User Agent</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-900">
+            {clickEvents.map((click) => (
+              <tr>
+                <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-white sm:pl-6">
+                  {new Date(click.clicked_at).toLocaleString()}
+                </td>
+                <td class="px-3 py-4 text-sm text-gray-500 dark:text-gray-400">
+                  <div class="max-w-[200px] truncate" title={click.referrer || 'Direct'}>
+                    {click.referrer || 'Direct'}
+                  </div>
+                </td>
+                <td class="px-3 py-4 text-sm text-gray-500 dark:text-gray-400">
+                  <div class="max-w-[200px] truncate" title={click.user_agent}>
+                    {click.user_agent || 'Unknown'}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )}
+</DashboardLayout>
+
+<script>
+  import { supabase } from '../../../lib/supabaseClient';
+  
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('edit-link-form') as HTMLFormElement;
+    const deleteBtn = document.getElementById('delete-btn');
+    const copyOriginalBtn = document.getElementById('copy-original-btn');
+    const copyLongBtn = document.getElementById('copy-long-btn');
+    
+    // Copy URL buttons
+    const copyButtons = [copyOriginalBtn, copyLongBtn];
+    copyButtons.forEach(btn => {
+      btn?.addEventListener('click', async () => {
+        const textToCopy = (btn as HTMLElement).dataset.copyText;
+        if (textToCopy) {
+          try {
+            await navigator.clipboard.writeText(textToCopy);
+            showToast('Link copied to clipboard!', 'success');
+          } catch (err) {
+            console.error('Failed to copy:', err);
+            showToast('Failed to copy link', 'error');
+          }
+        }
+      });
+    });
+    
+    // Handle form submission
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const linkId = (document.getElementById('link-id') as HTMLInputElement).value;
+      const title = (document.getElementById('title') as HTMLInputElement).value;
+      const isPublic = (document.getElementById('is_public') as HTMLInputElement).checked;
+      
+      try {
+        const { error } = await supabase
+          .from('links')
+          .update({
+            title: title || null,
+            is_public: isPublic
+          })
+          .eq('id', linkId);
+        
+        if (error) {
+          throw error;
+        }
+        
+        showToast('Link updated successfully', 'success');
+      } catch (err: any) {
+        console.error('Error updating link:', err);
+        showToast(`Error: ${err.message || 'Failed to update link'}`, 'error');
+      }
+    });
+    
+    // Delete link functionality
+    deleteBtn?.addEventListener('click', async () => {
+      const linkId = (deleteBtn as HTMLElement).dataset.linkId;
+      
+      if (linkId && confirm('Are you sure you want to delete this link? This action cannot be undone.')) {
+        try {
+          const { error } = await supabase
+            .from('links')
+            .delete()
+            .eq('id', linkId);
+          
+          if (error) {
+            throw error;
+          }
+          
+          // Redirect to links page after deletion
+          window.location.href = '/dashboard/links';
+        } catch (err: any) {
+          console.error('Error deleting link:', err);
+          showToast(`Error: ${err.message || 'Failed to delete link'}`, 'error');
+        }
+      }
+    });
+  });
+  
+  // Toast notification function
+  function showToast(message: string, type: 'success' | 'error' = 'success') {
+    // Create toast element if it doesn't exist
+    let toast = document.getElementById('toast-notification');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'toast-notification';
+      toast.className = 'fixed bottom-4 right-4 py-2 px-4 rounded-md shadow-md text-white transform transition-all duration-300 translate-y-full opacity-0';
+      document.body.appendChild(toast);
+    }
+
+    // Set styles based on type
+    if (type === 'success') {
+      toast.className = toast.className.replace(/bg-\w+-\d+/g, '');
+      toast.classList.add('bg-green-600');
+    } else {
+      toast.className = toast.className.replace(/bg-\w+-\d+/g, '');
+      toast.classList.add('bg-red-600');
+    }
+
+    // Set message and show
+    toast.textContent = message;
+    toast.classList.remove('translate-y-full', 'opacity-0');
+    
+    // Hide after 3 seconds
+    setTimeout(() => {
+      toast.classList.add('translate-y-full', 'opacity-0');
+    }, 3000);
+  }
+</script>

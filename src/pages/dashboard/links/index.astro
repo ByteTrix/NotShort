@@ -1,0 +1,303 @@
+---
+export const prerender = false;
+import DashboardLayout from '../../../layouts/DashboardLayout.astro';
+import { supabase } from '../../../lib/supabaseClient';
+import { requireAuth } from '../../../lib/authMiddleware';
+
+// Check authentication first
+const authResult = await requireAuth(Astro);
+
+if (authResult instanceof Response) {
+  return authResult; // This is a redirect
+}
+
+// Now we can be certain we have a session
+const session = authResult.session;
+if (!session) {
+  return Astro.redirect('/login');
+}
+const userId = session.user.id;
+
+// Get user's links with pagination support
+const page = parseInt(Astro.url.searchParams.get('page') || '1');
+const pageSize = 10;
+const start = (page - 1) * pageSize;
+const end = start + pageSize - 1;
+
+const { data: links, error: linksError, count } = await supabase
+  .from('links')
+  .select('id, slug, original, created_at, clicks, title, is_public', { count: 'exact' })
+  .eq('user_id', userId)
+  .order('created_at', { ascending: false })
+  .range(start, end);
+
+const totalPages = count ? Math.ceil(count / pageSize) : 0;
+
+// Site URL for generating full links
+const siteUrl = import.meta.env.SITE || 'https://kavinthangavel.com';
+---
+
+<DashboardLayout title="My Links - notshort">
+  <div class="md:flex md:items-center md:justify-between">
+    <div class="min-w-0 flex-1">
+      <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-white sm:truncate sm:text-3xl sm:tracking-tight">
+        My Links
+      </h2>
+      <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
+        Manage all your unnecessarily long URLs here
+      </p>
+    </div>
+    <div class="mt-4 flex md:ml-4 md:mt-0">
+      <a href="/dashboard/links/create" class="ml-3 inline-flex items-center rounded-md bg-gray-800 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-700 focus:outline-none">
+        Create New Link
+      </a>
+    </div>
+  </div>
+
+  <!-- Links Table -->
+  <div class="mt-8 flow-root">
+    <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+      <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+        <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
+          <table class="min-w-full divide-y divide-gray-300 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-800">
+              <tr>
+                <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-white sm:pl-6">Title / URL</th>
+                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">Long URL</th>
+                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">Clicks</th>
+                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">Created</th>
+                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">Status</th>
+                <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
+                  <span class="sr-only">Actions</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-900">
+              {links && links.length > 0 ? (
+                links.map((link) => (
+                  <tr id={`link-row-${link.id}`}>
+                    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6">
+                      <div class="flex flex-col">
+                        <div class="font-medium text-gray-900 dark:text-white">
+                          {link.title || "Untitled Link"}
+                        </div>
+                        <div class="text-gray-500 dark:text-gray-400 max-w-[250px] truncate">
+                          {link.original}
+                        </div>
+                      </div>
+                    </td>
+                    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400">
+                      <div class="flex items-center max-w-[250px]">
+                        <span class="truncate mr-2">
+                          {`${siteUrl}/${link.slug}`}
+                        </span>
+                        <button 
+                          class="copy-btn text-blue-600 dark:text-blue-400 hover:text-blue-800 p-1" 
+                          data-copy-text={`${siteUrl}/${link.slug}`}
+                          title="Copy to clipboard"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400">
+                      {link.clicks || 0}
+                    </td>
+                    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400">
+                      {new Date(link.created_at).toLocaleDateString()}
+                    </td>
+                    <td class="whitespace-nowrap px-3 py-4 text-sm">
+                      <span class={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${link.is_public ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'}`}>
+                        {link.is_public ? 'Public' : 'Private'}
+                      </span>
+                    </td>
+                    <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                      <div class="flex items-center justify-end gap-2">
+                        <a 
+                          href={`/dashboard/links/${link.id}`} 
+                          class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+                          title="Edit link"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </a>
+                        <button 
+                          type="button"
+                          class="delete-btn text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
+                          data-link-id={link.id}
+                          title="Delete link"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : linksError ? (
+                <tr>
+                  <td colspan="6" class="whitespace-nowrap py-4 pl-4 pr-3 text-sm text-red-500 dark:text-red-400 text-center sm:pl-6">
+                    Error loading links. Please try refreshing the page.
+                  </td>
+                </tr>
+              ) : (
+                <tr>
+                  <td colspan="6" class="whitespace-nowrap py-4 pl-4 pr-3 text-sm text-gray-500 dark:text-gray-400 text-center sm:pl-6">
+                    No links found. <a href="/dashboard/links/create" class="text-blue-600 dark:text-blue-400 hover:underline">Create your first link</a>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Pagination -->
+  {totalPages > 1 && (
+    <div class="mt-6 flex items-center justify-between">
+      <div class="flex flex-1 justify-between sm:hidden">
+        <a 
+          href={page > 1 ? `/dashboard/links?page=${page - 1}` : '#'} 
+          class={`relative inline-flex items-center rounded-md px-4 py-2 text-sm font-medium ${page > 1 ? 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800' : 'text-gray-300 dark:text-gray-600 cursor-not-allowed'}`}
+        >
+          Previous
+        </a>
+        <a 
+          href={page < totalPages ? `/dashboard/links?page=${page + 1}` : '#'} 
+          class={`relative ml-3 inline-flex items-center rounded-md px-4 py-2 text-sm font-medium ${page < totalPages ? 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800' : 'text-gray-300 dark:text-gray-600 cursor-not-allowed'}`}
+        >
+          Next
+        </a>
+      </div>
+      <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+        <div>
+          <p class="text-sm text-gray-700 dark:text-gray-300">
+            Showing <span class="font-medium">{start + 1}</span> to <span class="font-medium">{Math.min(end + 1, count ?? 0)}</span> of{" "}
+            <span class="font-medium">{count}</span> results
+          </p>
+        </div>
+        <div>
+          <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+            <!-- Previous Page -->
+            <a
+              href={page > 1 ? `/dashboard/links?page=${page - 1}` : '#'}
+              class={`relative inline-flex items-center rounded-l-md px-2 py-2 ${page > 1 ? 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800' : 'text-gray-300 dark:text-gray-600 cursor-not-allowed'}`}
+            >
+              <span class="sr-only">Previous</span>
+              <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clip-rule="evenodd" />
+              </svg>
+            </a>
+            
+            {/* Page numbers */}
+            {Array.from({ length: totalPages }).map((_, i) => (
+              <a
+                href={`/dashboard/links?page=${i + 1}`}
+                class={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${i + 1 === page ? 'bg-gray-800 text-white dark:bg-gray-600' : 'text-gray-900 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+              >
+                {i + 1}
+              </a>
+            ))}
+            
+            <!-- Next Page -->
+            <a
+              href={page < totalPages ? `/dashboard/links?page=${page + 1}` : '#'}
+              class={`relative inline-flex items-center rounded-r-md px-2 py-2 ${page < totalPages ? 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800' : 'text-gray-300 dark:text-gray-600 cursor-not-allowed'}`}
+            >
+              <span class="sr-only">Next</span>
+              <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
+              </svg>
+            </a>
+          </nav>
+        </div>
+      </div>
+    </div>
+  )}
+</DashboardLayout>
+
+<script>
+  import { supabase } from '../../../lib/supabaseClient';
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // Copy link functionality
+    const copyButtons = document.querySelectorAll('.copy-btn');
+    copyButtons.forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const textToCopy = (btn as HTMLElement).dataset.copyText;
+        if (textToCopy) {
+          try {
+            await navigator.clipboard.writeText(textToCopy);
+            showToast('Link copied to clipboard!', 'success');
+          } catch (err) {
+            console.error('Failed to copy:', err);
+            showToast('Failed to copy link', 'error');
+          }
+        }
+      });
+    });
+
+    // Delete link functionality
+    const deleteButtons = document.querySelectorAll('.delete-btn');
+    deleteButtons.forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const linkId = (btn as HTMLElement).dataset.linkId;
+        if (linkId && confirm('Are you sure you want to delete this link? This action cannot be undone.')) {
+          try {
+            const { error } = await supabase
+              .from('links')
+              .delete()
+              .eq('id', linkId);
+            
+            if (error) {
+              throw error;
+            }
+            
+            // Remove the row from the table
+            document.getElementById(`link-row-${linkId}`)?.remove();
+            showToast('Link deleted successfully', 'success');
+          } catch (err) {
+            console.error('Error deleting link:', err);
+            showToast('Failed to delete link', 'error');
+          }
+        }
+      });
+    });
+  });
+
+  // Simple toast notification function
+  function showToast(message: string, type: 'success' | 'error' = 'success') {
+    // Create toast element if it doesn't exist
+    let toast = document.getElementById('toast-notification');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'toast-notification';
+      toast.className = 'fixed bottom-4 right-4 py-2 px-4 rounded-md shadow-md text-white transform transition-all duration-300 translate-y-full opacity-0';
+      document.body.appendChild(toast);
+    }
+
+    // Set styles based on type
+    if (type === 'success') {
+      toast.className = toast.className.replace(/bg-\w+-\d+/g, '');
+      toast.classList.add('bg-green-600');
+    } else {
+      toast.className = toast.className.replace(/bg-\w+-\d+/g, '');
+      toast.classList.add('bg-red-600');
+    }
+
+    // Set message and show
+    toast.textContent = message;
+    toast.classList.remove('translate-y-full', 'opacity-0');
+    
+    // Hide after 3 seconds
+    setTimeout(() => {
+      toast.classList.add('translate-y-full', 'opacity-0');
+    }, 3000);
+  }
+</script>

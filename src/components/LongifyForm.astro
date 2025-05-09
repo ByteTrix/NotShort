@@ -1,0 +1,185 @@
+---
+// LongifyForm.astro - Form component for "longifying" URLs
+---
+
+<div class="longify-form w-full max-w-3xl mx-auto">
+  <form id="url-form" class="flex flex-col md:flex-row gap-4 w-full">
+    <div class="flex-grow">
+      <input 
+        type="url" 
+        id="original-url" 
+        name="url" 
+        placeholder="Enter a URL to make it unnecessarily long..." 
+        required
+        class="w-full px-4 py-3 border-1 border-gray-300 dark:border-gray-700 font-mono focus:ring-2 focus:ring-gray-400 focus:outline-none transition-colors"
+      />
+    </div>
+    <button
+      type="submit"
+      class="longify-submit-btn"
+    >
+      <span class="button-text">Make It Long!</span> {/* Wrap text */}
+    </button>
+  </form>
+  
+  <div id="result-container" class="mt-6 hidden">
+    <div class="bg-gray-100 dark:bg-gray-800 border-1 border-gray-200 dark:border-gray-700 p-6 rounded-sm">
+      <h3 class="font-mono text-lg mb-3">Your Unnecessarily Long URL:</h3>
+      <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+        <div class="url-display max-w-full overflow-hidden font-mono text-sm bg-white dark:bg-gray-900 p-3 border-1 border-gray-200 dark:border-gray-700 flex-grow break-all">
+          <span id="long-url">https://kavinthangavel.com/very-long-ridiculous-url-example</span>
+        </div>
+        <button 
+          id="copy-btn" 
+          class="py-2 px-4 bg-gray-800 hover:bg-gray-700 text-white font-mono text-sm transition-colors whitespace-nowrap"
+        >
+          Copy URL
+        </button>
+      </div>
+      <p id="copy-confirmation" class="text-green-600 mt-2 text-sm hidden">
+        Copied to clipboard!
+      </p>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-4">
+        We've added ~500% more characters to your URL. You're welcome!
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('url-form');
+    const resultContainer = document.getElementById('result-container');
+    const longUrlElement = document.getElementById('long-url');
+    const copyBtn = document.getElementById('copy-btn');
+    const copyConfirmation = document.getElementById('copy-confirmation');
+    
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      // Get the URL from the form
+      const urlInput = document.getElementById('original-url') as HTMLInputElement;
+      const url = urlInput.value.trim();
+      
+      if (!url) return;
+        try {
+        // Call the longify API endpoint
+        const response = await fetch('/api/longify', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ url }),
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          // If user is not authenticated, redirect to login page
+          if (response.status === 401) {
+            const loginUrl = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+            window.location.href = loginUrl;
+            return;
+          }
+          throw new Error(errorData.error || 'Failed to create long URL');
+        }
+        
+        const data = await response.json();
+        
+        // Display the result
+        if (longUrlElement && resultContainer) {
+          longUrlElement.textContent = data.long;
+          longUrlElement.setAttribute('data-url', data.long);
+          resultContainer.classList.remove('hidden');
+          
+          // Scroll to the result container
+          resultContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      } catch (error: any) { // Type error as 'any' to access message property
+        console.error('Error longifying URL:', error);
+        alert(`Error: ${error.message || 'Failed to create long URL'}`);
+      }
+    });
+    
+    // Copy to clipboard functionality
+    copyBtn?.addEventListener('click', async () => {
+      const urlToCopy = longUrlElement?.getAttribute('data-url') || longUrlElement?.textContent;
+      
+      if (urlToCopy) {
+        try {
+          await navigator.clipboard.writeText(urlToCopy);
+          
+          // Show copy confirmation
+          if (copyConfirmation) {
+            copyConfirmation.classList.remove('hidden');
+            setTimeout(() => {
+              copyConfirmation.classList.add('hidden');
+            }, 3000);
+          }
+        } catch (err) {
+          console.error('Failed to copy URL:', err);
+        }
+      }
+    });
+  });
+</script>
+
+<style>
+  .longify-submit-btn {
+    /* Base styles */
+    display: inline-block; /* Or block if it takes full width */
+    position: relative;
+    padding: 0.8rem 1.75rem; /* Slightly larger padding */
+    font-family: var(--font-mono); /* Use mono font from config */
+    font-size: 1rem; /* text-base equivalent */
+    font-weight: 600; /* semibold */
+    color: #ffffff; /* White text */
+    background-color: #1F2937; /* bg-gray-800 */
+    border: none;
+    border-radius: 0.375rem; /* rounded-md */
+    cursor: pointer;
+    overflow: hidden;
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+    z-index: 1; /* Ensure button is above potential background elements */
+    text-align: center;
+    min-width: 150px; /* Ensure minimum width */
+  }
+
+  .longify-submit-btn .button-text {
+    position: relative;
+    z-index: 2; /* Keep text above the gradient */
+  }
+
+  .longify-submit-btn::before {
+    /* Gradient background */
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(95deg, #4f46e5 0%, #a855f7 50%, #ec4899 100%); /* New gradient */
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.45s cubic-bezier(0.77, 0, 0.175, 1); /* Smoother, slightly slower wipe */
+    z-index: 1; /* Behind the text */
+  }
+
+  .longify-submit-btn:hover {
+    transform: scale(1.01); /* Keep subtle scale, remove lift */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+  }
+
+  .longify-submit-btn:hover::before {
+    transform: scaleX(1); /* Reveal gradient on hover */
+  }
+
+  .longify-submit-btn:active {
+    transform: scale(1.00); /* Remove translateY, keep press down scale */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Remove old styles if they exist */
+  /* .btn-bg { display: none; } */
+  /* .longify-btn { /* potentially override if needed */ } */
+
+</style>

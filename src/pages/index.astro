@@ -1,75 +1,188 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
-import CountUp from '../components/CountUp.astro';
 import Section from '../components/Section.astro';
 import { getCollection } from 'astro:content';
 import ProjectCard from '../components/ProjectCard.astro';
 import SectionSpacer from '../components/SectionSpacer.astro';
 import StatsGrid from '../components/StatsGrid.astro';
 import InvestorGrid from '../components/InvestorGrid.astro';
+import LongifyForm from '../components/LongifyForm.astro';
+import RecentLinks from '../components/RecentLinks.astro';
+// import { getRepoStats, getRepoUrl } from '../lib/github';
 
 const projects = await getCollection('projects');
+// const gitStats = await getRepoStats();
 ---
 
-<Layout title="Welcome to Astro.">
-	<Header gridBg>
-		<small class="small">can you believe this text is so small?</small>
-		<h2 class="text-12 leading-12 lg:text-20 lg:leading-20"><span class="font-mono">NAID</span> - A template for doers</h2>
-		<p class="subtitle w-85% lg:w-50% mx-auto mt-5">A short manifesto about how this project is going to change the world.</p>
-	</Header>
-	<main>
-		<Section index source="projects.json" fullWidthBorder>
-			<h2 class="title">Projects</h2>
-			<p class="subtitle-small">A short blurb about the projects you are deciding to list here and what they are about. Make it pithy and worth investing in.</p>
-			<ul class="my-5 project-list ignore-content-container border-y-1 border-y-gray-200 border-y-dotted">
-				{projects.map((proj: any) => <ProjectCard {...proj.data} />)}
-			</ul>
-			<div class="grid md:grid-cols-[1fr_250px] py-12.5">
-				<div class="grid-col-1 pr-12.5">
-					<h3 class="mb-3 project-title">Mission</h3>
-					<p class="subtitle-small">Another pithy statement about the nature of these projects. Talk more about how they're beneficial to all developers/users and really underline how helpful they are in improving DX/UX.</p>
-				</div>
-				<div class="font-mono">
-					<small>$ cmd to run</small><br/><br/>
-					<small>{'{An animation of some kind.}'}</small>
-				</div>
-			</div>
-		</Section>
-		<SectionSpacer size="md" />
-		<Section fullWidthBorder={false}>
-			<h2 class="text-xl my-10">Our projects are trusted. By everyone? You bet! Names you recognize? Probably! Used all over the world? Absolutely!</h2>
-		</Section>
-		<StatsGrid entryName='downloads' />
-		<SectionSpacer size="md" />
-		<Section variant="dark" index source="statement.md" fullWidthBorder>
-			<div class="lg:w-[60%] md:w-[70%] mx-auto">
-				<h2 class="title">Belief Statement</h2>
-				<p class="subtitle-mall">We believe in things that exist and are pragmatic. This can include buzzwords that make investors feel all warm inside.</p>
-				<ul class="flex flex-col gap-row-3 mt-3 subtitle-small">
-					<li><strong class="text-[1.2em]">Teamwork:</strong> Things and people should work together seamlessly for a better world and a better DX</li>
-					<li><strong class="text-[1.2em]">Performant:</strong> If you're not first you're last - some guy on TV once</li>
-					<li><strong class="text-[1.2em]">Even Tempered:</strong> Too blessed to be stressed. And too stressed to let the little things get to us</li>
-					<li><strong class="text-[1.2em]">On Kilter:</strong> When the going gets tough, the tough politely ask the weak to step up like just a little bit, if you don't mind</li>
-				</ul>
-			</div>
-		</Section>
-		<SectionSpacer size="md" />
-		<Section index source="investors.md" fullWidthBorder>
-			<div class="pb-12.5">
-				<h2 class="title">People who give us money!</h2>
-				<p class="subtitle-small md:w-[50%]">There's literally dozens of them, and they all want to be listed below to get some sort of credit for our work.</p>
-			</div>
-			<InvestorGrid />
-		</Section>
-		<SectionSpacer />
-		<Section index source="Component.framework" fullWidthBorder variantInside="dark">
-			<div class="grid lg:grid-cols-[4fr_1fr] place-items-center gap-5">
-				<h2 class="text-pretty title text-8 leading-8 font-bold c-gray-800 dark:c-gray-100">Interested in this theme? Like the look of it and need more in your life?<br/><span class="c-gray-500 dark:c-gray-300 text-[0.9em]">We know! It's pretty great.</span></h2>
-				<div>
-					<a href="https://github.com/studiolumina/naid" class="block fw-bold bg-gray-800 c-gray-100 text-5 text-center py-4 px-7">Visit Repo</a>
-				</div>
-			</div>
-		</Section>
-	</main>
+<Layout title="NotShort – A Parody Link Longner">
+  <Header gridBg>
+    <div class="text-center py-12 md:py-35"> {/* Added padding for better spacing */}
+      <p class="font-mono text-sm text-gray-600 dark:text-gray-400 mb-2"> {/* Adjusted tagline styling */}
+        The only site that makes your links longer, not shorter!
+      </p>
+      <h1 class="text-6xl md:text-7xl font-serif font-bold mb-6 text-gray-900 dark:text-white"> {/* Larger, serif font for title */}
+        NotShort
+      </h1>
+      <p class="text-lg text-gray-700 dark:text-gray-300 max-w-xl mx-auto mb-8"> {/* Slightly larger subtitle */}
+        Welcome to the world's best parody of a link shortener. We take your short links and make them as long and ridiculous as possible. Why be short when you can be notshort? (🥳 Get it ? "NotShort")
+      </p>
+      <div class="mt-10 max-w-lg mx-auto"> {/* Added max-width to form container */}
+        <LongifyForm />
+      </div>
+    </div>
+  </Header>
+  
+  <main>
+    <!-- Recent Links Section (Real data) -->
+    <RecentLinks />
+    
+    <SectionSpacer size="md" />
+    
+    <!-- Stats Grid with real statistics -->
+    <Section fullWidthBorder={false}>
+      <div class="text-center py-8"> {/* Added padding */}
+        <h2 class="title mb-4">Our Global Impact on URL Verbosity</h2> {/* More "corporate" heading */}
+        <p class="subtitle-small max-w-2xl mx-auto">
+          Witness the staggering growth of unnecessarily elongated links across the digital expanse. We're revolutionizing inefficiency, one character at a time.
+        </p> {/* Humorous sub-description */}
+      </div>
+    </Section>
+    <StatsGrid entryName='downloads' />
+    
+    <SectionSpacer size="md" />
+    
+    <!-- GitHub Contributors Section -->
+    <Section index source="contributors.md" fullWidthBorder variant="dark">
+      <div class="lg:w-[70%] md:w-[80%] mx-auto">
+        <h2 class="title mb-8">Our Confused Contributors</h2>
+        <p class="subtitle-small mb-8">These brave souls write code that makes URLs longer instead of shorter. They still don't understand the assignment.</p>
+<!--         
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {gitStats.contributors.map((contributor) => (
+            <a href={contributor.url} target="_blank" rel="noopener noreferrer" 
+               class="contributor-card flex items-center p-4 border-1 border-gray-700 bg-gray-800 hover:bg-gray-700 transition-colors duration-300 transform hover:scale-[1.02]">
+              <img src={contributor.avatar} alt={contributor.name} class="w-12 h-12 rounded-full mr-4" />
+              <div>
+                <h3 class="font-mono text-gray-100">{contributor.name}</h3>
+                <p class="text-xs text-gray-400">GitHub Contributor</p>
+              </div>
+            </a>
+          ))} 
+        </div> -->
+        
+        <div class="text-center mt-8">
+          <a href="#" class="longify-btn"> {/* Placeholder href */}
+            <span class="relative z-10">View All Contributors</span> {/* Wrap text in span */}
+          </a>
+        </div>
+      </div>
+    </Section>
+    
+    <SectionSpacer size="md" />
+    
+    <!-- Investors Section -->
+    <Section index source="investors.md" fullWidthBorder>
+      <div class="pb-12.5">
+        <h2 class="title">Our Confused Supporters</h2>
+        <p class="subtitle-small md:w-[50%]">These brave souls support our mission to make the internet less efficient. They couldn't figure out how to withdraw their funding.</p>
+      </div>
+      <InvestorGrid />
+    </Section>
+    
+    <SectionSpacer />
+    
+    <!-- Repository Section -->
+    <Section index source="Component.framework" fullWidthBorder variantInside="dark">
+      <div class="grid lg:grid-cols-[4fr_1fr] place-items-center gap-5">
+        <h2 class="text-pretty title text-8 leading-8 font-bold c-gray-800 dark:c-gray-100">Want to contribute to the URL longification revolution?<br/><span class="c-gray-500 dark:c-gray-300 text-[0.9em]">Check out our unnecessarily complicated GitHub repository.</span></h2>
+        <div>
+          <a href="#" class="longify-btn"> {/* Placeholder href */}
+            <span class="relative z-10">Visit Repo</span> {/* Wrap text in span */}
+          </a>
+        </div>
+      </div>
+    </Section>
+    
+    <SectionSpacer />
+    
+    <!-- Why Choose NotShort Section -->
+    <Section variant="dark" index source="statement.md" fullWidthBorder>
+      <div class="text-center py-12 md:py-16"> {/* Added padding and text-center */}
+        <h2 class="title mb-4">Why Choose NotShort?</h2>
+        <p class="subtitle-small max-w-2xl mx-auto mb-8">
+          Tired of short, boring links? So are we! NotShort is the revolutionary service you never knew you needed, dedicated to making your web addresses impressively long and confusing.
+        </p>
+        <ul class="text-left max-w-md mx-auto space-y-3 text-gray-300"> {/* Centered list, adjusted spacing */}
+          <li><strong class="font-semibold text-white">More Characters, More Fun:</strong> We add tons of extra letters, numbers, and dashes. Because why not?</li>
+          <li><strong class="font-semibold text-white">Guaranteed Slowdown:</strong> Sharing links takes longer. Perfect for avoiding actual work.</li>
+          <li><strong class="font-semibold text-white">Confuse Your Friends:</strong> Send links that look important (but probably aren't).</li>
+          <li><strong class="font-semibold text-white">Totally Pointless:</strong> It's the core feature! Embrace the absurdity.</li>
+        </ul>
+      </div>
+    </Section>
+  </main>
 </Layout>
+
+<style>
+  .longify-btn {
+    display: inline-block;
+    position: relative;
+    padding: 0.75rem 1.5rem; /* 12px 24px */
+    font-weight: bold; /* fw-bold */
+    color: #E5E7EB; /* c-gray-100 / text-gray-200 approx */
+    background-color: #1F2937; /* bg-gray-800 */
+    text-align: center;
+    border-radius: 0.375rem; /* rounded-md */
+    overflow: hidden;
+    transition: color 0.3s ease, transform 0.2s ease;
+    transform-origin: center;
+  }
+
+  .longify-btn::before { /* Replaces btn-bg span */
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #3B82F6 0%, #8B5CF6 100%);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1); /* Smoother transition */
+    z-index: 0;
+  }
+
+  .longify-btn:hover {
+    color: white; /* Ensure text is visible on gradient */
+    transform: scale(1.03); /* Subtle scale on hover */
+  }
+
+  .longify-btn:hover::before {
+    transform: scaleX(1);
+  }
+  
+  .longify-btn span { /* If you keep the span structure */
+    position: relative;
+    z-index: 1;
+  }
+
+  /* If you remove the inner spans and just put text in <a> */
+  /* .longify-btn { z-index: 1; } ensure text is above ::before */
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .contributor-card {
+    animation: fadeIn 0.5s ease forwards;
+    opacity: 0;
+  }
+  
+  .contributor-card:nth-child(1) { animation-delay: 0.1s; }
+  .contributor-card:nth-child(2) { animation-delay: 0.2s; }
+  .contributor-card:nth-child(3) { animation-delay: 0.3s; }
+  .contributor-card:nth-child(4) { animation-delay: 0.4s; }
+  .contributor-card:nth-child(5) { animation-delay: 0.5s; }
+</style>

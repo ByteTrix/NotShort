@@ -1,0 +1,133 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Section from '../components/Section.astro';
+---
+
+<Layout title="Login - notshort">
+  <Section>
+    <div class="flex flex-col items-center justify-center py-12">
+      <h2 class="title mb-8">Login</h2>
+      <p class="subtitle-small mb-8 text-center max-w-md">Access your account to view your unnecessarily long URLs.</p>
+      
+      <!-- Email/Password Login Form -->
+      <form id="login-form" class="flex flex-col gap-6 w-full max-w-md border-1 border-gray-200 p-8 rounded-sm">
+        <div class="flex flex-col gap-2">
+          <label for="email" class="font-mono text-sm">Email Address</label>
+          <input type="email" name="email" id="email" placeholder="your@email.com" required 
+                 class="px-4 py-3 border-1 border-gray-200 font-mono" />
+        </div>
+        
+        <div class="flex flex-col gap-2">
+          <label for="password" class="font-mono text-sm">Password</label>
+          <input type="password" name="password" id="password" placeholder="••••••••" required 
+                 class="px-4 py-3 border-1 border-gray-200 font-mono" />
+        </div>
+        
+        <p id="error-message" class="text-red-500 text-sm font-mono hidden"></p>
+        
+        <div class="mt-4">
+          <button type="submit" class="block fw-bold bg-gray-800 c-gray-100 text-5 text-center py-4 px-7 w-full">
+            Login
+          </button>
+        </div>
+      </form>
+      
+      <!-- Social Login Options -->
+      <div class="mt-8 mb-6 text-center">
+        <p class="text-sm font-mono text-gray-500 mb-4">Or continue with</p>
+        
+        <div class="flex flex-wrap justify-center gap-4">
+          <button id="google-login" class="social-login-btn border-1 border-gray-200 px-6 py-3 font-mono flex items-center gap-2 hover:bg-gray-50 transition-colors">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" class="w-5 h-5" />
+            Google
+          </button>
+          
+          <button id="github-login" class="social-login-btn border-1 border-gray-200 px-6 py-3 font-mono flex items-center gap-2 hover:bg-gray-50 transition-colors">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+            </svg>
+            GitHub
+          </button>
+        </div>
+      </div>
+      
+      <p class="mt-2 font-mono text-sm">
+        Don't have an account? <a href="/signup" class="underline">Sign up</a>
+      </p>
+    </div>
+  </Section>
+</Layout>
+
+<script>
+  import { supabase } from '../lib/supabaseClient';
+  import type { Provider } from '@supabase/supabase-js';
+  
+  const form = document.getElementById('login-form');
+  const errorMessage = document.getElementById('error-message');
+  const googleLoginBtn = document.getElementById('google-login');
+  const githubLoginBtn = document.getElementById('github-login');
+  
+  // Email/Password login
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const email = (document.getElementById('email') as HTMLInputElement).value;
+    const password = (document.getElementById('password') as HTMLInputElement).value;
+    
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (error) {
+        if (errorMessage) {
+          errorMessage.textContent = error.message;
+          errorMessage.classList.remove('hidden');
+        }
+        return;
+      }
+      
+      // Redirect on successful login
+      const urlParams = new URLSearchParams(window.location.search);
+      const redirectUrl = urlParams.get('redirect');
+      window.location.href = redirectUrl || '/dashboard';
+    } catch (err) {
+      console.error('Login error:', err);
+      if (errorMessage) {
+        errorMessage.textContent = 'An unexpected error occurred. Please try again.';
+        errorMessage.classList.remove('hidden');
+      }
+    }
+  });
+  
+  // Social login handlers
+  async function handleSocialLogin(provider: Provider) {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+      
+      if (error) {
+        console.error(`${provider} login error:`, error);
+        if (errorMessage) {
+          errorMessage.textContent = `Failed to sign in with ${provider}. Please try again.`;
+          errorMessage.classList.remove('hidden');
+        }
+      }
+    } catch (err) {
+      console.error(`${provider} login error:`, err);
+      if (errorMessage) {
+        errorMessage.textContent = 'An unexpected error occurred. Please try again.';
+        errorMessage.classList.remove('hidden');
+      }
+    }
+  }
+  
+  // Add event listeners for social login buttons
+  googleLoginBtn?.addEventListener('click', () => handleSocialLogin('google'));
+  githubLoginBtn?.addEventListener('click', () => handleSocialLogin('github'));
+</script>

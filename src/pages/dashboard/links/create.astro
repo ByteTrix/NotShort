@@ -1,0 +1,211 @@
+---
+export const prerender = false;
+import DashboardLayout from '../../../layouts/DashboardLayout.astro';
+import { supabase } from '../../../lib/supabaseClient';
+import { requireAuth } from '../../../lib/authMiddleware';
+
+// Check authentication first
+const authResult = await requireAuth(Astro);
+
+if (authResult instanceof Response) {
+  return authResult; // This is a redirect
+}
+
+// Now we can be certain we have a session
+const session = authResult.session;
+if (!session) {
+  return Astro.redirect('/login');
+}
+---
+
+<DashboardLayout title="Create Link - notshort">
+  <div>
+    <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-white sm:truncate sm:text-3xl sm:tracking-tight">
+      Create New Link
+    </h2>
+    <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
+      Enter a URL to create an unnecessarily long version of it
+    </p>
+  </div>
+  
+  <div class="mt-8">
+    <form id="create-link-form" class="space-y-6">
+      <!-- Original URL -->
+      <div>
+        <label for="original" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          Original URL
+        </label>
+        <div class="mt-1">
+          <input
+            type="url"
+            name="original"
+            id="original"
+            required
+            placeholder="https://example.com/your-short-url"
+            class="block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:bg-gray-800 dark:text-white py-2 px-3"
+          />
+        </div>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          Enter the URL you want to make unnecessarily long
+        </p>
+      </div>
+      
+      <!-- Title (optional) -->
+      <div>
+        <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          Title (optional)
+        </label>
+        <div class="mt-1">
+          <input
+            type="text"
+            name="title"
+            id="title"
+            placeholder="My awesome link"
+            class="block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:bg-gray-800 dark:text-white py-2 px-3"
+          />
+        </div>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          A friendly name to help you identify this link
+        </p>
+      </div>
+      
+      <!-- Privacy Setting -->
+      <div>
+        <div class="flex items-center">
+          <input
+            id="is_public"
+            name="is_public"
+            type="checkbox"
+            checked
+            class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800"
+          />
+          <label for="is_public" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+            Make this link public
+          </label>
+        </div>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          Public links can be accessed by anyone. Private links are only visible to you.
+        </p>
+      </div>
+      
+      <!-- Submit Button -->
+      <div class="flex justify-end">
+        <a href="/dashboard/links" class="rounded-md bg-white dark:bg-gray-700 py-2 px-4 text-sm font-medium text-gray-700 dark:text-gray-200 shadow-sm border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 mr-3">
+          Cancel
+        </a>
+        <button
+          type="submit"
+          class="rounded-md bg-gray-800 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+        >
+          Create Long URL
+        </button>
+      </div>
+    </form>
+  </div>
+  
+  <!-- Result Container (hidden by default) -->
+  <div id="result-container" class="mt-8 hidden">
+    <div class="rounded-md bg-gray-50 dark:bg-gray-800 p-6 border border-gray-200 dark:border-gray-700">
+      <h3 class="text-lg font-medium text-gray-900 dark:text-white">Your Unnecessarily Long URL is Ready!</h3>
+      
+      <div class="mt-4">
+        <div class="flex flex-col sm:flex-row sm:items-center">
+          <div class="flex-1 font-mono text-sm bg-white dark:bg-gray-900 p-3 border border-gray-200 dark:border-gray-700 rounded-md break-all">
+            <span id="long-url-result">https://kavinthangavel.com/very-long-ridiculous-url</span>
+          </div>
+          <button id="copy-btn" class="mt-2 sm:mt-0 sm:ml-3 py-2 px-4 bg-gray-800 hover:bg-gray-700 text-white text-sm font-medium rounded-md">
+            Copy URL
+          </button>
+        </div>
+        
+        <p id="copy-confirmation" class="mt-2 text-sm text-green-600 dark:text-green-400 hidden">
+          Copied to clipboard!
+        </p>
+      </div>
+      
+      <div class="mt-6">
+        <a href="/dashboard/links" class="text-blue-600 dark:text-blue-400 hover:underline text-sm font-medium">
+          ← Back to My Links
+        </a>
+      </div>
+    </div>
+  </div>
+</DashboardLayout>
+
+<script>
+  import { supabase } from '../../../lib/supabaseClient';
+  
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('create-link-form') as HTMLFormElement;
+    const resultContainer = document.getElementById('result-container');
+    const longUrlResult = document.getElementById('long-url-result');
+    const copyBtn = document.getElementById('copy-btn');
+    const copyConfirmation = document.getElementById('copy-confirmation');
+    
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const originalUrl = (document.getElementById('original') as HTMLInputElement).value;
+      const title = (document.getElementById('title') as HTMLInputElement).value;
+      const isPublic = (document.getElementById('is_public') as HTMLInputElement).checked;
+      
+      try {
+        const response = await fetch('/api/longify', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            url: originalUrl,
+            title: title || null,
+            isPublic
+          })
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to create long URL');
+        }
+        
+        const data = await response.json();
+        
+        // Display the result
+        if (longUrlResult) {
+          longUrlResult.textContent = data.long;
+          longUrlResult.setAttribute('data-url', data.long);
+        }
+        
+        // Show result container
+        resultContainer?.classList.remove('hidden');
+        
+        // Scroll to result
+        resultContainer?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+      } catch (err: any) {
+        console.error('Error creating URL:', err);
+        alert(`Error: ${err.message || 'Failed to create long URL'}`);
+      }
+    });
+    
+    // Copy to clipboard functionality
+    copyBtn?.addEventListener('click', async () => {
+      const urlToCopy = longUrlResult?.getAttribute('data-url') || longUrlResult?.textContent;
+      
+      if (urlToCopy) {
+        try {
+          await navigator.clipboard.writeText(urlToCopy);
+          
+          // Show copy confirmation
+          copyConfirmation?.classList.remove('hidden');
+          
+          // Hide after 3 seconds
+          setTimeout(() => {
+            copyConfirmation?.classList.add('hidden');
+          }, 3000);
+        } catch (err) {
+          console.error('Failed to copy:', err);
+        }
+      }
+    });
+  });
+</script>
