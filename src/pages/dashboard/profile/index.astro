@@ -1,0 +1,97 @@
+---
+export const prerender = false;
+import DashboardLayout from '../../../layouts/DashboardLayout.astro';
+import { supabase } from '../../../lib/supabaseClient';
+import { requireAuth } from '../../../lib/authMiddleware';
+import { getUserProfile, formatDate } from '../../../lib/userProfile';
+
+// Check authentication first
+const authResult = await requireAuth(Astro);
+
+if (authResult instanceof Response) {
+  return authResult; // This is a redirect
+}
+
+// Now we can be certain we have an authenticated user
+const { session, user } = authResult;
+
+// Get structured user profile
+const userProfile = getUserProfile(user);
+const avatarUrl = userProfile?.avatarUrl;
+const fullName = userProfile?.displayName || 'User';
+const provider = userProfile?.provider || 'email';
+const createdAt = formatDate(session?.user?.created_at || null, 'long');
+---
+
+<DashboardLayout title="Your Profile - notshort">
+  <div class="py-6">
+    <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-white sm:truncate sm:text-3xl sm:tracking-tight">
+      Your Profile
+    </h2>
+    <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
+      Your account information and preferences
+    </p>
+  </div>
+
+  <div class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg mt-6">
+    <div class="px-4 py-5 sm:px-6 flex items-center justify-between">
+      <div>
+        <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">User Information</h3>
+        <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">Personal details and account information.</p>
+      </div>
+      <div>
+        <a href="/dashboard/settings" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none">
+          Edit Profile
+        </a>
+      </div>
+    </div>
+    <div class="border-t border-gray-200 dark:border-gray-700">
+      <div class="px-4 py-5 sm:p-6">
+        <!-- Profile picture and name -->
+        <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+          <div class="flex-shrink-0">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt={fullName} class="h-24 w-24 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700" />
+            ) : (
+              <div class="h-24 w-24 rounded-full bg-gray-600 text-white flex items-center justify-center font-mono text-3xl">
+                {fullName.charAt(0).toUpperCase()}
+              </div>
+            )}
+          </div>
+          <div>
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">{fullName}</h2>
+            <p class="text-gray-500 dark:text-gray-400">{user.email}</p>
+            <div class="mt-2 flex items-center">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                {provider.charAt(0).toUpperCase() + provider.slice(1)} Login
+              </span>
+              <span class="ml-2 text-sm text-gray-500 dark:text-gray-400">Member since {createdAt}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Account Details -->
+        <div class="mt-8 border-t border-gray-200 dark:border-gray-700 pt-6">
+          <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+            <div>
+              <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Email address</dt>
+              <dd class="mt-1 text-sm text-gray-900 dark:text-white">{user.email}</dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Account ID</dt>
+              <dd class="mt-1 text-sm text-gray-900 dark:text-white font-mono">{user.id}</dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Account type</dt>
+              <dd class="mt-1 text-sm text-gray-900 dark:text-white">Standard</dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Member since</dt>
+              <dd class="mt-1 text-sm text-gray-900 dark:text-white">{createdAt}</dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </div>
+</DashboardLayout>

@@ -1,0 +1,304 @@
+---
+export const prerender = false;
+import DashboardLayout from '../../../layouts/DashboardLayout.astro';
+import { supabase } from '../../../lib/supabaseClient';
+import { requireAuth } from '../../../lib/authMiddleware';
+
+// Check authentication first
+const authResult = await requireAuth(Astro);
+
+if (authResult instanceof Response) {
+  return authResult; // This is a redirect
+}
+
+// Now we can be certain we have an authenticated user
+const { user } = authResult;
+const userId = user.id;
+
+// Get user's links with analytics data
+const { data: links, error: linksError } = await supabase
+  .from('links')
+  .select('id, slug, original, created_at, clicks, title')
+  .eq('user_id', userId)
+  .order('clicks', { ascending: false })
+  .limit(100);
+
+if (linksError) {
+  console.error('Error fetching links for analytics:', linksError);
+}
+
+// Calculate total clicks
+let totalClicks = 0;
+if (links) {
+  totalClicks = links.reduce((sum: number, link: { clicks?: number }) => sum + (link.clicks || 0), 0);
+}
+
+// Calculate clicks over time (monthly)
+const clicksByMonth: { [key: string]: number } = {};
+const now = new Date();
+for (let i = 0; i < 6; i++) {
+  const month = new Date(now.getFullYear(), now.getMonth() - i, 1);
+  const monthKey = `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, '0')}`;
+  clicksByMonth[monthKey] = 0;
+}
+
+// Get monthly click data (this would need a table with click timestamps in a real implementation)
+// For this example, we'll use mock data
+clicksByMonth[Object.keys(clicksByMonth)[0]] = totalClicks * 0.4; // Current month
+clicksByMonth[Object.keys(clicksByMonth)[1]] = totalClicks * 0.3; // Last month
+clicksByMonth[Object.keys(clicksByMonth)[2]] = totalClicks * 0.15;
+clicksByMonth[Object.keys(clicksByMonth)[3]] = totalClicks * 0.1;
+clicksByMonth[Object.keys(clicksByMonth)[4]] = totalClicks * 0.03;
+clicksByMonth[Object.keys(clicksByMonth)[5]] = totalClicks * 0.02;
+
+// Format months for display
+const formattedMonths = Object.keys(clicksByMonth).map(monthKey => {
+  const [year, month] = monthKey.split('-');
+  const date = new Date(parseInt(year), parseInt(month) - 1, 1);
+  return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+});
+
+// Prepare data for charts
+const chartLabels = JSON.stringify(formattedMonths.reverse());
+const chartData = JSON.stringify(Object.values(clicksByMonth).reverse());
+
+// Get top performing links
+const topLinks = [...(links || [])].sort((a, b) => (b.clicks || 0) - (a.clicks || 0)).slice(0, 5);
+---
+
+<DashboardLayout title="Analytics - notshort">
+  <div class="py-6">
+    <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-white sm:truncate sm:text-3xl sm:tracking-tight">
+      Analytics
+    </h2>
+    <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
+      Track the performance of your unnecessarily long URLs
+    </p>
+  </div>
+
+  <!-- Analytics Overview Cards -->
+  <div class="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    <!-- Total Clicks -->
+    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+      <div class="px-4 py-5 sm:p-6">
+        <div class="flex items-center">
+          <div class="flex-shrink-0 bg-gray-100 dark:bg-gray-700 rounded-md p-3">
+            <svg class="h-6 w-6 text-gray-600 dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+            </svg>
+          </div>
+          <div class="ml-5 w-0 flex-1">
+            <dl>
+              <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                Total Clicks
+              </dt>
+              <dd>
+                <div class="text-lg font-medium text-gray-900 dark:text-white">
+                  {totalClicks.toLocaleString()}
+                </div>
+              </dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total Links -->
+    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+      <div class="px-4 py-5 sm:p-6">
+        <div class="flex items-center">
+          <div class="flex-shrink-0 bg-gray-100 dark:bg-gray-700 rounded-md p-3">
+            <svg class="h-6 w-6 text-gray-600 dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+            </svg>
+          </div>
+          <div class="ml-5 w-0 flex-1">
+            <dl>
+              <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                Total Links
+              </dt>
+              <dd>
+                <div class="text-lg font-medium text-gray-900 dark:text-white">
+                  {links ? links.length.toLocaleString() : '0'}
+                </div>
+              </dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Average Clicks per Link -->
+    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+      <div class="px-4 py-5 sm:p-6">
+        <div class="flex items-center">
+          <div class="flex-shrink-0 bg-gray-100 dark:bg-gray-700 rounded-md p-3">
+            <svg class="h-6 w-6 text-gray-600 dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </div>
+          <div class="ml-5 w-0 flex-1">
+            <dl>
+              <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                Average Clicks per Link
+              </dt>
+              <dd>
+                <div class="text-lg font-medium text-gray-900 dark:text-white">
+                  {links && links.length > 0 ? (totalClicks / links.length).toFixed(1) : '0'}
+                </div>
+              </dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Click Trends Chart -->
+  <div class="mt-8 bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg">
+    <div class="px-4 py-5 sm:px-6">
+      <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">Click Trends</h3>
+      <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">Monthly clicks over the last 6 months.</p>
+    </div>
+    <div class="px-4 py-5 sm:p-6">
+      <div class="h-64">
+        <canvas id="clicksChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Performing Links -->
+  <div class="mt-8 bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg">
+    <div class="px-4 py-5 sm:px-6">
+      <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">Top Performing Links</h3>
+      <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">Your most clicked unnecessarily long URLs.</p>
+    </div>
+    <div class="border-t border-gray-200 dark:border-gray-700">
+      <div class="px-4 py-5 sm:p-6">
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-900">
+              <tr>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Title / Original URL</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Long URL</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Clicks</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+              {topLinks.map((link) => (
+                <tr>
+                  <td class="px-6 py-4">
+                    <div class="text-sm font-medium text-gray-900 dark:text-white">{link.title || 'Untitled'}</div>
+                    <div class="text-sm text-gray-500 dark:text-gray-400 truncate max-w-xs">{link.original}</div>
+                  </td>
+                  <td class="px-6 py-4">
+                    <div class="text-sm font-mono text-gray-500 dark:text-gray-400 truncate max-w-xs">
+                      {Astro.url.origin}/{link.slug}
+                    </div>
+                  </td>
+                  <td class="px-6 py-4">
+                    <div class="text-sm text-gray-900 dark:text-white font-semibold">{link.clicks || 0}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    {new Date(link.created_at).toLocaleDateString()}
+                  </td>
+                </tr>
+              ))}
+              {topLinks.length === 0 && (
+                <tr>
+                  <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                    No links found. Create some unnecessarily long URLs to see analytics.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</DashboardLayout>
+
+<script define:vars={{ chartLabels, chartData }}>
+  // Import Chart.js from CDN
+  import { supabase } from '../../../lib/supabaseClient';
+  // The Chart variable is loaded from the CDN script,
+  // so we can tell TypeScript to ignore the "cannot find name" error.
+  // @ts-ignore
+
+  // Wait for the document to be loaded
+  document.addEventListener('DOMContentLoaded', async () => {
+    // Load Chart.js dynamically
+    const chartScript = document.createElement('script');
+    chartScript.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+    document.head.appendChild(chartScript);
+
+    chartScript.onload = () => {
+      // Chart.js is loaded, create the chart
+      createChart(chartLabels, chartData);
+    };
+  });
+
+  // Create the clicks chart
+  function createChart(chartLabelsJSON, chartDataJSON) {
+    const ctx = document.getElementById('clicksChart');
+    if (!ctx) return;
+
+    const labels = JSON.parse(chartLabelsJSON);
+    const data = JSON.parse(chartDataJSON);
+    
+    // Check if Chart is available (it should be after loading the script)
+    if (typeof Chart !== 'undefined') {
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Clicks',
+            data: data,
+            backgroundColor: 'rgba(75, 85, 99, 0.2)',
+            borderColor: 'rgba(75, 85, 99, 1)',
+            borderWidth: 2,
+            tension: 0.3,
+            pointBackgroundColor: 'rgba(75, 85, 99, 1)'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+              labels: {
+                color: document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#111827'
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: {
+                color: document.documentElement.classList.contains('dark') ? 'rgba(229, 231, 235, 0.1)' : 'rgba(17, 24, 39, 0.1)'
+              },
+              ticks: {
+                color: document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#111827'
+              }
+            },
+            x: {
+              grid: {
+                color: document.documentElement.classList.contains('dark') ? 'rgba(229, 231, 235, 0.1)' : 'rgba(17, 24, 39, 0.1)'
+              },
+              ticks: {
+                color: document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#111827'
+              }
+            }
+          }
+        }
+      });
+    } else {
+      console.error('Chart.js not loaded');
+    }
+  }
+</script>

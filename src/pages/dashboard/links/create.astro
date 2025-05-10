@@ -11,11 +11,8 @@ if (authResult instanceof Response) {
   return authResult; // This is a redirect
 }
 
-// Now we can be certain we have a session
-const session = authResult.session;
-if (!session) {
-  return Astro.redirect('/login');
-}
+// Now we can be certain we have an authenticated user
+const { session, user } = authResult;
 ---
 
 <DashboardLayout title="Create Link - notshort">
