@@ -27,7 +27,7 @@ const gaMeasurementIdExists = !!import.meta.env.PUBLIC_GA_MEASUREMENT_ID;
 		{/* Google Analytics 4 (GA4) */}
 		{gaMeasurementIdExists && (
 			<>
-				<script async src={`https://www.googletagmanager.com/gtag/js?id=${import.meta.env.GA_MEASUREMENT_ID}`}></script>
+				<script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${import.meta.env.GA_MEASUREMENT_ID}`}></script>
 				<script is:inline>
 				  window.dataLayer = window.dataLayer || [];
 				  function gtag(){dataLayer.push(arguments);}
@@ -59,7 +59,11 @@ const gaMeasurementIdExists = !!import.meta.env.PUBLIC_GA_MEASUREMENT_ID;
 				</div>
 			</div>
 		</nav>
-		<slot />
+		<main>
+			<slot />
+		</main>
+		{/* Container for toast notifications, managed by toastService.ts */}
+		<div id="toast-notifications-container" class="fixed top-0 right-0 z-50 p-4 space-y-2"></div>
 		<Footer />
 		
 		<script>
@@ -75,7 +79,7 @@ const gaMeasurementIdExists = !!import.meta.env.PUBLIC_GA_MEASUREMENT_ID;
 				// First authenticate user securely through the Supabase Auth server
 				const { data: userData } = await supabase.auth.getUser();
 				// Then get the session if needed
-				const { data } = await supabase.auth.getSession();
+				await supabase.auth.getSession(); // We don't need the session data, just the user data
 				// Use authenticated user status as the source of truth
 				const isLoggedIn = !!userData.user;
 				

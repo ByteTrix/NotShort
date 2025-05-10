@@ -123,7 +123,7 @@ import Section from '../components/Section.astro';
   // Social signup handlers
   async function handleSocialSignup(provider: Provider) {
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: provider,
         options: {
           redirectTo: `${window.location.origin}/auth/callback`

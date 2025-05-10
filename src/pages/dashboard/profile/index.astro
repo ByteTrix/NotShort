@@ -1,7 +1,6 @@
 ---
 export const prerender = false;
 import DashboardLayout from '../../../layouts/DashboardLayout.astro';
-import { supabase } from '../../../lib/supabaseClient';
 import { requireAuth } from '../../../lib/authMiddleware';
 import { getUserProfile, formatDate } from '../../../lib/userProfile';
 

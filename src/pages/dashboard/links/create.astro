@@ -1,7 +1,6 @@
 ---
 export const prerender = false;
 import DashboardLayout from '../../../layouts/DashboardLayout.astro';
-import { supabase } from '../../../lib/supabaseClient';
 import { requireAuth } from '../../../lib/authMiddleware';
 
 // Check authentication first
@@ -12,7 +11,7 @@ if (authResult instanceof Response) {
 }
 
 // Now we can be certain we have an authenticated user
-const { session, user } = authResult;
+// const { session, user } = authResult; // session and user are not used
 ---
 
 <DashboardLayout title="Create Link - notshort">
@@ -130,7 +129,6 @@ const { session, user } = authResult;
 </DashboardLayout>
 
 <script>
-  import { supabase } from '../../../lib/supabaseClient';
   
   document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('create-link-form') as HTMLFormElement;

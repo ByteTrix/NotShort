@@ -1,10 +1,8 @@
 ---
-console.log("[Dashboard Index Frontmatter] TOP OF SCRIPT - /dashboard trying to render");
 export const prerender = false;
 import DashboardLayout from '../../layouts/DashboardLayout.astro';
 import { supabase } from '../../lib/supabaseClient'; // This is the client-side instance
 import { requireAuth } from '../../lib/authMiddleware';
-import type { Session } from '@supabase/supabase-js';
 
 interface Link {
   id: string; // Or number, depending on your schema
@@ -23,7 +21,7 @@ if (authResult instanceof Response) {
 }
 
 // authResult now contains both the session and authenticated user
-const { session, user } = authResult;
+const { user } = authResult; // session is not used
 
 // Now session is guaranteed to be a non-null Session and user is guaranteed to be authenticated
 const userId = user.id; // Use the authenticated user from getUser() rather than from session
@@ -32,7 +30,7 @@ const userId = user.id; // Use the authenticated user from getUser() rather than
 // Note: Using the client-side `supabase` instance here.
 // For data fetching in SSR, it's often better to use a server-side client if row-level security depends on the user.
 // However, `userId` is already available, so `eq('user_id', userId)` should work.
-const { data: links, error: linksError } = await supabase
+const { data: links } = await supabase
   .from('links')
   .select('id, slug, original, created_at, clicks, title')
   .eq('user_id', userId)
@@ -40,7 +38,7 @@ const { data: links, error: linksError } = await supabase
   .limit(5);
 
 // Get total links count
-const { count: totalLinks, error: countError } = await supabase
+const { count: totalLinks } = await supabase
   .from('links')
   .select('id', { count: 'exact', head: true })
   .eq('user_id', userId);

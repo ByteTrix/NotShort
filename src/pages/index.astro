@@ -2,17 +2,63 @@
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Section from '../components/Section.astro';
-import { getCollection } from 'astro:content';
-import ProjectCard from '../components/ProjectCard.astro';
 import SectionSpacer from '../components/SectionSpacer.astro';
-import StatsGrid from '../components/StatsGrid.astro';
 import InvestorGrid from '../components/InvestorGrid.astro';
 import LongifyForm from '../components/LongifyForm.astro';
 import RecentLinks from '../components/RecentLinks.astro';
-// import { getRepoStats, getRepoUrl } from '../lib/github';
+import { getRepoStats } from '../lib/github'; // Updated to getRepoStats for stars
+import { createSupabaseServerClient } from '../lib/supabaseClient';
+import CountUp from "../components/CountUp.astro"; // For animated numbers
 
-const projects = await getCollection('projects');
-// const gitStats = await getRepoStats();
+const supabase = createSupabaseServerClient(Astro.cookies);
+
+let generatedUrlsCount: number | string = 'N/A';
+let activeUsersCount: number | string = 'N/A';
+let githubStarsCount: number | string = 'N/A';
+
+try {
+  const { count: urlsCount, error: urlsError } = await supabase
+    .from('links') // Assuming 'links' table stores generated URLs
+    .select('*', { count: 'exact', head: true });
+
+  if (urlsError) {
+    console.error('Error fetching generated URLs count:', urlsError.message);
+  } else {
+    generatedUrlsCount = urlsCount ?? 0;
+  }
+} catch (e: any) {
+  console.error('Supabase query error (URLs):', e.message);
+}
+
+try {
+  // Assuming 'users' table or a view that gives active users.
+  // If you have a specific way to define "active users" (e.g., last_active_at),
+  // this query would need to be adjusted.
+  const { count: usersCount, error: usersError } = await supabase
+    .from('users') // Assuming 'users' table
+    .select('*', { count: 'exact', head: true });
+
+  if (usersError) {
+    console.error('Error fetching active users count:', usersError.message);
+  } else {
+    activeUsersCount = usersCount ?? 0;
+  }
+} catch (e: any) {
+  console.error('Supabase query error (Users):', e.message);
+}
+
+try {
+  const repoStats = await getRepoStats(); // Fetches stars, forks, etc.
+  githubStarsCount = repoStats.stars;
+} catch (e: any) {
+  console.error('Error fetching GitHub stars:', e.message);
+}
+
+const newStats = [
+  { title: "URLs Generated", value: generatedUrlsCount, unit: "", by: "" },
+  { title: "Active Users", value: activeUsersCount, unit: "", by: "" },
+  { title: "GitHub Stars", value: githubStarsCount, unit: "✨", by: "" },
+];
 ---
 
 <Layout title="NotShort – A Parody Link Longner">
@@ -48,7 +94,21 @@ const projects = await getCollection('projects');
         </p> {/* Humorous sub-description */}
       </div>
     </Section>
-    <StatsGrid entryName='downloads' />
+    <!-- New Stats Display -->
+    <Section class="py-0" padBlock={false}>
+      <ul class="inherit-content-container grid lg:grid-cols-[repeat(3,1fr)] grid-auto-rows-[200px] place-center">
+        {newStats.map(({ title, value, unit }) => (
+          <li class="flex flex-col justify-center text-center border-r-1 border-r-gray-200 dark:border-r-gray-700 last:border-r-0 px-4">
+            {typeof value === 'number' ? (
+              <CountUp class="text-8 md:text-10 font-mono" start={0} end={value} unit={unit} />
+            ) : (
+              <span class="text-8 md:text-10 font-mono">{value}{unit}</span>
+            )}
+            <p class="text-md mt-2">{title}</p>
+          </li>
+        ))}
+      </ul>
+    </Section>
     
     <SectionSpacer size="md" />
     

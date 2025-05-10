@@ -68,7 +68,6 @@ The included collections are:
 - authors &mdash; Each author get's their own `.json` file that can be referenced.
 - posts &mdash; Markdown files should go here, with frontmatter matching the collection schema
 - investors &mdash; This is a single entry collection, but could be converted to multiple entry fairly easily.
-- projects &mdash; This is a multi entry collection, each project gets it's own `.json` file
 - stats &mdash; This is a multi entry collection, use the `<StatsGrid entryName={entryIdentifier}>` component to generate a grid based on the data in the matching `.json` file.
 
 If you wanted a page for all the stats in the collection, it would hypothetically look like this:

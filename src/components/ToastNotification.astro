@@ -1,0 +1,65 @@
+---
+export interface Props {
+  message: string;
+  type: 'success' | 'error' | 'warning' | 'info';
+  duration?: number; // Duration in ms, 0 for indefinite
+}
+
+const { message, type, duration = 3000 } = Astro.props;
+
+const baseClasses = "fixed top-5 right-5 p-4 rounded-md shadow-lg text-white transition-all duration-300 ease-in-out transform";
+const typeClasses = {
+  success: "bg-green-500",
+  error: "bg-red-500",
+  warning: "bg-yellow-500",
+  info: "bg-blue-500",
+};
+
+const toastId = `toast-${Math.random().toString(36).substr(2, 9)}`;
+---
+
+<div
+  id={toastId}
+  class:list={[baseClasses, typeClasses[type], "opacity-0", "translate-y-[-20px]"]}
+  role="alert"
+  aria-live="assertive"
+  data-duration={duration}
+>
+  <div class="flex items-center justify-between">
+    <span class="message-content">{message}</span>
+    <button
+      class="ml-4 text-xl font-semibold leading-none hover:text-gray-200 focus:outline-none"
+      aria-label="Close"
+      onclick={`document.getElementById('${toastId}').remove()`}
+    >
+      &times;
+    </button>
+  </div>
+</div>
+
+<script define:vars={{ toastId }}>
+  const toastElement = document.getElementById(toastId);
+  if (toastElement) {
+    // Animate in
+    setTimeout(() => {
+      toastElement.classList.remove("opacity-0", "translate-y-[-20px]");
+      toastElement.classList.add("opacity-100", "translate-y-0");
+    }, 10); // Small delay to ensure transition triggers
+
+    const duration = parseInt(toastElement.dataset.duration, 10);
+    if (duration > 0) {
+      setTimeout(() => {
+        toastElement.classList.remove("opacity-100", "translate-y-0");
+        toastElement.classList.add("opacity-0", "translate-y-[-20px]");
+        setTimeout(() => {
+          toastElement.remove();
+        }, 300); // Allow fade-out animation to complete
+      }, duration);
+    }
+  }
+</script>
+
+<style>
+  /* Add any additional global styles for toasts if needed,
+     but prefer Tailwind classes for consistency. */
+</style>

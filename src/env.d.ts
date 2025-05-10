@@ -10,3 +10,12 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+// Add user type to Astro.locals
+import type { User } from '@supabase/supabase-js';
+
+declare namespace App {
+  interface Locals {
+    user?: User;
+  }
+}

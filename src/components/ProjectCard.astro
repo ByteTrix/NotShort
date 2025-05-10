@@ -1,13 +1,26 @@
 ---
-import { getCollection } from 'astro:content'
+// import { getCollection } from 'astro:content'
 import GithubIcon from './GithubIcon.astro';
 import CountUp from './CountUp.astro';
 
-const projects = await getCollection('projects');
+// const projects = await getCollection('projects');
 
-type Props = typeof projects[0]['data'];
+// type Props = typeof projects[0]['data'];
 
-const { title, subtitle, contributors, stars, repoUrl, logo = null, starsBy = 1, contributorsBy = 1 } = Astro.props;
+// Define Props based on the expected structure if ProjectCard were to be used.
+// This is a placeholder as the component is currently unused.
+type Props = {
+    title: string;
+    subtitle: string;
+    contributors: number;
+    stars: number;
+    repoUrl: string;
+    starsBy?: number;
+    contributorsBy?: number;
+    logo?: string;
+};
+
+const { title, subtitle, contributors, stars, repoUrl, starsBy = 1, contributorsBy = 1 } = Astro.props;
 ---
 <li class="grid grid-cols-subgrid grid-col-[1/-1] items-center c-gray-600 hover:c-black transition relative border-b-1 border-b-gray-200">
     <div class="grid-col-[span_1] c-black border-r-1 border-r-gray-200 h-100% flex flex-col justify-center h-[100%] pl-12.5">

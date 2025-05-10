@@ -4,7 +4,7 @@
 
 // GitHub API URLs
 const REPO_OWNER = 'kavinthangavel';
-const REPO_NAME = 'naid';
+const REPO_NAME = 'NotShort';
 const REPO_API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}`;
 
 // Cache for GitHub stats to avoid excessive API calls
