@@ -31,7 +31,7 @@ const { data: links, error: linksError, count } = await supabase
 const totalPages = count ? Math.ceil(count / pageSize) : 0;
 
 // Site URL for generating full links
-const siteUrl = import.meta.env.SITE || 'https://kavinthangavel.com';
+const siteUrl = import.meta.env.SITE ;
 ---
 
 <DashboardLayout title="My Links - notshort">

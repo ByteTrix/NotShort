@@ -40,7 +40,7 @@ const { data: clickEvents, error: clickError } = await supabase
   .limit(50);
 
 // Site URL for generating full links
-const siteUrl = import.meta.env.SITE || 'https://kavinthangavel.com';
+const siteUrl = import.meta.env.SITE ;
 const longUrl = `${siteUrl}/${link.slug}`;
 ---
 

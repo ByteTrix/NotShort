@@ -3,7 +3,7 @@
  */
 
 // GitHub API URLs
-const REPO_OWNER = 'studiolumina';
+const REPO_OWNER = 'kavinthangavel';
 const REPO_NAME = 'naid';
 const REPO_API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}`;
 
