@@ -1,14 +1,25 @@
 ---
 import Layout from './Layout.astro';
 import { supabase } from '../lib/supabaseClient';
+import { getUserProfile } from '../lib/userProfile';
 
 // Get user data - but don't attempt to redirect from here
 // Redirection should happen in the page components themselves
+// First authenticate user through the Supabase Auth server
+const { data: userData } = await supabase.auth.getUser();
+const authenticatedUser = userData.user;
+
+// Then get the session data for any session-specific information
 const { data } = await supabase.auth.getSession();
 const session = data.session || null;
 
-// Only proceed if session exists
-const user = session?.user || null;
+// Use the authenticated user from getUser() for security
+const user = authenticatedUser || null;
+
+// Use our utility to get structured user profile information
+const userProfile = getUserProfile(user);
+const avatarUrl = userProfile?.avatarUrl;
+const userDisplayName = userProfile?.displayName || 'User';
 const userEmail = user?.email || 'User';
 
 // Get page title from props or default
@@ -39,22 +50,29 @@ const { title = 'Dashboard - notshort' } = Astro.props;
           
           <div class="flex items-center">
             <div class="relative ml-3">
-              <div class="flex items-center">
-                <div class="hidden md:block">
-                  <span class="font-mono text-sm text-gray-600 dark:text-gray-300 mr-3">{userEmail}</span>
+              <div class="flex items-center">                <div class="hidden md:block">
+                  <span class="font-mono text-sm text-gray-600 dark:text-gray-300 mr-3">{userDisplayName}</span>
                 </div>
                 <button id="user-menu-button" type="button" class="bg-gray-800 flex text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-gray-500" aria-expanded="false" aria-haspopup="true">
                   <span class="sr-only">Open user menu</span>
-                  <div class="h-8 w-8 rounded-full bg-gray-600 text-white flex items-center justify-center font-mono">
-                    {userEmail.charAt(0).toUpperCase()}
-                  </div>
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt={userDisplayName} class="h-8 w-8 rounded-full object-cover" />
+                  ) : (
+                    <div class="h-8 w-8 rounded-full bg-gray-600 text-white flex items-center justify-center font-mono">
+                      {userDisplayName.charAt(0).toUpperCase()}
+                    </div>
+                  )}
                 </button>
               </div>
-              
-              <!-- Dropdown menu -->
+                <!-- Dropdown menu -->
               <div id="user-dropdown" class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white dark:bg-gray-800 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none hidden" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
+                <a href="/dashboard" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Dashboard</a>
+                <a href="/dashboard/links" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">My Links</a>
+                <a href="/dashboard/analytics" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Analytics</a>
+                <div class="border-t border-gray-100 dark:border-gray-700"></div>
                 <a href="/dashboard/profile" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Your Profile</a>
                 <a href="/dashboard/settings" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Settings</a>
+                <div class="border-t border-gray-100 dark:border-gray-700"></div>
                 <button id="logout-button" class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Sign out</button>
               </div>
             </div>

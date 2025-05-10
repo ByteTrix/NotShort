@@ -1,29 +1,96 @@
 import type { APIRoute } from 'astro';
+import {
+  getRandomElement,
+  adjectives,
+  silly_nouns,
+  places,
+  animals,
+  verbs,
+  funny_phrases,
+  absurd_comparisons,
+  humorousTemplates,
+  urlOpenerJokeTemplates,
+  animeDialogues,
+  animeCharacters
+} from '../../lib/longifyWordBanks';
 import { createSupabaseServerClient } from '../../lib/supabaseClient';
-import { nanoid } from 'nanoid';
 
-// Function to generate a random string of a specific length
-function generateRandomString(length: number): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
-}
 
-// Generate an unnecessarily long slug (the parody part)
+
+// Generate an unnecessarily long, humorous, meaningful sentence slug
 function generateLongSlug(): string {
-  const segments = [];
-  // Generate 3-5 word-like segments
-  const segmentCount = Math.floor(Math.random() * 3) + 3; // 3-5 segments
-  
-  for (let i = 0; i < segmentCount; i++) {
-    const segmentLength = Math.floor(Math.random() * 8) + 4; // 4-12 characters per segment
-    segments.push(generateRandomString(segmentLength));
+  const initialAdjective = getRandomElement(adjectives);
+  const initialSillyNoun = getRandomElement(silly_nouns);
+  const generatedSentences: string[] = [];
+
+  const placeholderMap: Record<string, string[]> = {
+    "{adj}": adjectives,
+    "{adj2}": adjectives, // Using the same adjectives bank for {adj2}
+    "{silly_noun}": silly_nouns,
+    "{place}": places,
+    "{animal}": animals,
+    "{verb}": verbs,
+    "{funny_phrase}": funny_phrases,
+    "{absurd_comparison}": absurd_comparisons,
+    "{anime_dialogue}": animeDialogues,
+    "{anime_char}": animeCharacters,
+  };
+
+  // Helper function to fill placeholders in a template
+  const fillTemplate = (template: string): string => {
+    let filledTemplate = template;
+    const placeholdersInTemplate = [...new Set(filledTemplate.match(/{\w+}/g) || [])];
+    for (const placeholder of placeholdersInTemplate) {
+      const wordBank = placeholderMap[placeholder];
+      if (wordBank && wordBank.length > 0) {
+        const regex = new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+        filledTemplate = filledTemplate.replace(regex, () => getRandomElement(wordBank));
+      }
+    }
+    return filledTemplate;
+  };
+
+  // 1. Opener Joke
+  if (urlOpenerJokeTemplates && urlOpenerJokeTemplates.length > 0) {
+    const openerTemplate = getRandomElement(urlOpenerJokeTemplates);
+    generatedSentences.push(fillTemplate(openerTemplate));
+  } else {
+    // Fallback if urlOpenerJokeTemplates is empty, though it shouldn't be
+    generatedSentences.push(fillTemplate(getRandomElement(humorousTemplates)));
   }
+
+  // 2. Additional Humorous Sentences
+  // Loop a significant number of times (e.g., 6-11 iterations)
+  const additionalSentencesCount = 11 + Math.floor(Math.random() * 4); // Results in 11 to 14 iterations
+
+  for (let i = 0; i < additionalSentencesCount; i++) {
+    const currentTemplate = getRandomElement(humorousTemplates);
+    generatedSentences.push(fillTemplate(currentTemplate));
+  }
+
+  let combinedText = initialAdjective + " " + initialSillyNoun + " " + generatedSentences.join(' ');
+
+  // Slugify the final combined string:
+  // 1. Convert to lowercase
+  let slug = combinedText.toLowerCase();
+
+  // 2. Remove specific punctuation (e.g., ?, ', ,, .) before hyphenation.
+  // Includes common apostrophes and quotation marks.
+  slug = slug.replace(/[?',.’"]/g, '');
+
+  // 3. Replace spaces with a single hyphen
+  slug = slug.replace(/\s+/g, '-');
   
-  return segments.join('-');
+  // 4. Remove any character that is not a letter (a-z), number (0-9), or hyphen (-)
+  slug = slug.replace(/[^a-z0-9-]/g, '');
+  
+  // 5. Replace sequences of hyphens with a single hyphen
+  slug = slug.replace(/-+/g, '-');
+  
+  // 6. Trim leading/trailing hyphens (e.g., if a sentence started/ended with punctuation)
+  slug = slug.replace(/^-+|-+$/g, '');
+
+  return slug;
 }
 
 export const POST: APIRoute = async ({ request, cookies }) => {
@@ -90,7 +157,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     // If the current user has already created a long URL for this original URL
     if (existingUserLink) {
       console.log('[API] Found duplicate URL for this user:', url);
-      const siteUrl = import.meta.env.SITE || 'https://kavinthangavel.com';
+      const siteUrl = import.meta.env.SITE;
       const existingLongUrl = `${siteUrl}/${existingUserLink.slug}`;
       
       return new Response(
@@ -147,7 +214,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     }
     
     // Generate the long URL
-    const longUrl = `${import.meta.env.SITE || 'https://kavinthangavel.com'}/${slug}`;
+    const longUrl = `${import.meta.env.SITE }/${slug}`;
     
     // Return the longified URL with additional stats
     return new Response(

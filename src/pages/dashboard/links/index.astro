@@ -11,12 +11,9 @@ if (authResult instanceof Response) {
   return authResult; // This is a redirect
 }
 
-// Now we can be certain we have a session
-const session = authResult.session;
-if (!session) {
-  return Astro.redirect('/login');
-}
-const userId = session.user.id;
+// Now we can be certain we have an authenticated user
+const { session, user } = authResult;
+const userId = user.id;
 
 // Get user's links with pagination support
 const page = parseInt(Astro.url.searchParams.get('page') || '1');
@@ -34,7 +31,7 @@ const { data: links, error: linksError, count } = await supabase
 const totalPages = count ? Math.ceil(count / pageSize) : 0;
 
 // Site URL for generating full links
-const siteUrl = import.meta.env.SITE || 'https://kavinthangavel.com';
+const siteUrl = import.meta.env.SITE ;
 ---
 
 <DashboardLayout title="My Links - notshort">

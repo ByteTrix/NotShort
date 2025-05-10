@@ -11,12 +11,9 @@ if (authResult instanceof Response) {
   return authResult; // This is a redirect
 }
 
-// Now we can be certain we have a session
-const session = authResult.session;
-if (!session) {
-  return Astro.redirect('/login');
-}
-const userId = session.user.id;
+// Now we can be certain we have an authenticated user
+const { session, user } = authResult;
+const userId = user.id;
 
 // Get link ID from params
 const { id } = Astro.params;
@@ -43,7 +40,7 @@ const { data: clickEvents, error: clickError } = await supabase
   .limit(50);
 
 // Site URL for generating full links
-const siteUrl = import.meta.env.SITE || 'https://kavinthangavel.com';
+const siteUrl = import.meta.env.SITE ;
 const longUrl = `${siteUrl}/${link.slug}`;
 ---
 

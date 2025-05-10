@@ -56,11 +56,14 @@ const navLinks = {
 			const signupLink = document.getElementById('signup-link');
 			const dashboardLink = document.getElementById('dashboard-link');
 			const logoutBtn = document.getElementById('logout-btn');
-			
-			// Check auth status and update UI
+					// Check auth status and update UI
 			async function updateAuthUI() {
+				// First authenticate user securely through the Supabase Auth server
+				const { data: userData } = await supabase.auth.getUser();
+				// Then get the session if needed
 				const { data } = await supabase.auth.getSession();
-				const isLoggedIn = !!data.session;
+				// Use authenticated user status as the source of truth
+				const isLoggedIn = !!userData.user;
 				
 				if (isLoggedIn) {
 					// User is logged in

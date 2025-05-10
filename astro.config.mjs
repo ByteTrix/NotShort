@@ -6,10 +6,10 @@ import node from '@astrojs/node';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://kavinthangavel.com',
+  site: 'https://thekavin.com',
   output: "server",
   adapter: node({
-    mode: 'standalone' // 'middleware' if you're using a framework like Express
+    mode: 'standalone'
   }),
   integrations: [Unocss({ injectReset: true, injectEntry: true }), icon()]
 });

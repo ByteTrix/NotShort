@@ -22,18 +22,11 @@ if (authResult instanceof Response) {
   return authResult; // This is a redirect
 }
 
-const sessionObject = authResult.session;
+// authResult now contains both the session and authenticated user
+const { session, user } = authResult;
 
-if (!sessionObject) {
-  // This case implies requireAuth returned { session: null }
-  // which is a fallback for /login paths, or an unexpected issue.
-  console.error("[Dashboard Index] Session object is null after auth check. Redirecting to login.");
-  return Astro.redirect('/login?error=unexpected_null_session_dashboard');
-}
-
-// Now sessionObject is guaranteed to be a non-null Session
-const session: Session = sessionObject; // Explicitly type for clarity
-const userId = session.user.id;
+// Now session is guaranteed to be a non-null Session and user is guaranteed to be authenticated
+const userId = user.id; // Use the authenticated user from getUser() rather than from session
 
 // Get user's links
 // Note: Using the client-side `supabase` instance here.
@@ -59,15 +52,14 @@ if (links) {
 }
 
 // Site URL for generating full links
-const siteUrl = import.meta.env.SITE || 'https://kavinthangavel.com';
+const siteUrl = import.meta.env.SITE ;
 ---
 
 <DashboardLayout title="Dashboard - notshort">
   <!-- Welcome Header -->
   <div class="md:flex md:items-center md:justify-between">
-    <div class="min-w-0 flex-1">
-      <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-white sm:truncate sm:text-3xl sm:tracking-tight">
-        Welcome back, {session?.user?.email?.split('@')[0] || 'User'}!
+    <div class="min-w-0 flex-1">      <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-white sm:truncate sm:text-3xl sm:tracking-tight">
+        Welcome back, {user?.email?.split('@')[0] || 'User'}!
       </h2>
       <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
         Here's an overview of your unnecessarily long URLs

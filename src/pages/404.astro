@@ -1,0 +1,22 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Section from '../components/Section.astro';
+---
+
+<Layout title="404 - Page Not Found - notshort">
+  <Section>
+    <div class="flex flex-col items-center justify-center py-20">
+      <div class="text-9xl font-mono font-bold text-gray-800 dark:text-gray-200 mb-8">404</div>
+      <h1 class="text-3xl font-mono font-bold text-gray-800 dark:text-gray-200 mb-4">This page isn't short or long</h1>
+      <p class="text-xl text-gray-600 dark:text-gray-400 mb-12">It just doesn't exist.</p>
+      <div class="flex flex-wrap gap-6">
+        <a href="/" class="px-8 py-3 bg-gray-800 text-white font-mono hover:bg-gray-700 transition-colors">
+          Go Home
+        </a>
+        <a href="/dashboard" class="px-8 py-3 border border-gray-300 text-gray-800 dark:text-gray-200 font-mono hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+          Dashboard
+        </a>
+      </div>
+    </div>
+  </Section>
+</Layout>
