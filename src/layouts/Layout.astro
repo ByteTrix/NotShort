@@ -12,6 +12,7 @@ const navLinks = {
 	"/blog":"Blog",
 	"/about":"About"
 }
+const gaMeasurementIdExists = !!import.meta.env.PUBLIC_GA_MEASUREMENT_ID;
 ---
 
 <!doctype html>
@@ -23,6 +24,19 @@ const navLinks = {
 		<link rel="icon" type="image/svg+xml" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Layer_1" x="0px" y="0px" viewBox="0 0 100 100" enable-background="new 0 0 100 100" xml:space="preserve" height="100px" width="100px"><text y=".9em" font-size="90">0️⃣</text></svg>' />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title || SITE_NAME}</title>
+		{/* Google Analytics 4 (GA4) */}
+		{gaMeasurementIdExists && (
+			<>
+				<script async src={`https://www.googletagmanager.com/gtag/js?id=${import.meta.env.GA_MEASUREMENT_ID}`}></script>
+				<script is:inline>
+				  window.dataLayer = window.dataLayer || [];
+				  function gtag(){dataLayer.push(arguments);}
+				  gtag('js', new Date());
+				  gtag('config', '${import.meta.env.PUBLIC_GA_MEASUREMENT_ID}');
+				</script>
+			</>
+		)}
+		{/* End Google Analytics 4 */}
 	</head>
 	<body>
 		<nav class="border-b-1 border-b-gray-200">
