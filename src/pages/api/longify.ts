@@ -140,7 +140,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     
     // Check if this original URL already exists for the current user
     console.log('[API] Checking for existing URL for this user:', url);
-    const { data: existingUserLinks, error: existingUserLinkError } = await supabase
+    const { data: existingUserLinks } = await supabase
       .from('links')
       .select('*')
       .eq('original', url)

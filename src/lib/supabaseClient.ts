@@ -1,6 +1,10 @@
-import { createBrowserClient, createServerClient, type CookieOptions } from '@supabase/ssr';
+import {
+  createBrowserClient,
+  createServerClient,
+  type CookieOptions
+} from '@supabase/ssr';
 import type { AstroCookies } from 'astro';
-import type { SupabaseClient } from '@supabase/supabase-js';
+
 
 const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
@@ -15,18 +19,24 @@ if (!supabaseUrl || !supabaseAnonKey) {
 export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
 
 // Server-side client (for Astro frontmatter and API routes)
-export const createSupabaseServerClient = (cookies: AstroCookies): SupabaseClient => {
-  return createServerClient(supabaseUrl, supabaseAnonKey, {
-    cookies: {
-      get(key: string) {
-        return cookies.get(key)?.value;
+export const createSupabaseServerClient = (astroCookies: AstroCookies) => {
+  return createServerClient(
+    supabaseUrl,
+    supabaseAnonKey,
+    {
+      cookies: {
+        get(name: string) {
+          const cookie = astroCookies.get(name);
+          return cookie?.value;
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          astroCookies.set(name, value, options);
+        },
+        remove(name: string, options: CookieOptions) {
+          // For Astro, astroCookies.delete is the standard method
+          astroCookies.delete(name, options);
+        }
       },
-      set(key: string, value: string, options: CookieOptions) {
-        cookies.set(key, value, options);
-      },
-      remove(key: string, options: CookieOptions) {
-        cookies.delete(key, options);
-      },
-    },
-  });
+    }
+  );
 };

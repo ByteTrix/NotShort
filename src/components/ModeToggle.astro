@@ -14,21 +14,6 @@ if (modes.indexOf(activeMode as string) === -1) {
     <span class="dark:block light:hidden">🌙</span>
 </button>
 <script>
-    const toggle = () => {
-        let currentMode = Astro.cookies.get('mode')?.value;
-        let nextMode = currentMode === 'light' ? 'dark' : 'light';
-        const toggles = document.querySelectorAll('[data-c="modeToggle"]');
-        if (!currentMode) {
-            toggles.forEach(el => (el.classList.remove('dark'), el.classList.add('light')));
-            Astro.cookies.set('mode', 'light');
-            currentMode = 'light';
-        } else {
-            
-            Astro.cookies.set('mode', currentMode === 'light' ? 'dark' : 'light');
-            // toggles.forEach()
-        }
-    }
-    
     document.addEventListener('click', ({ target }) => {
         const btn = (target as HTMLElement).closest('[data-c="modeToggle"]');
         if (!btn) return;

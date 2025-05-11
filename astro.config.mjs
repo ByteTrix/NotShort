@@ -2,14 +2,12 @@
 import { defineConfig } from 'astro/config';
 import Unocss from 'unocss/astro';
 import icon from 'astro-icon';
-import node from '@astrojs/node';
+import vercel from '@astrojs/vercel';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://thekavin.com',
+  site: 'https://thekavin.com', // User should update this later with their actual production domain
   output: "server",
-  adapter: node({
-    mode: 'standalone'
-  }),
+  adapter: vercel({}),
   integrations: [Unocss({ injectReset: true, injectEntry: true }), icon()]
 });

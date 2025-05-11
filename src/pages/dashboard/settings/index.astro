@@ -1,7 +1,6 @@
 ---
 export const prerender = false;
 import DashboardLayout from '../../../layouts/DashboardLayout.astro';
-import { supabase } from '../../../lib/supabaseClient';
 import { requireAuth } from '../../../lib/authMiddleware';
 import { getUserProfile } from '../../../lib/userProfile';
 
@@ -13,7 +12,7 @@ if (authResult instanceof Response) {
 }
 
 // Now we can be certain we have an authenticated user
-const { session, user } = authResult;
+const { user } = authResult; // session is not used
 
 // Get structured user profile
 const userProfile = getUserProfile(user);

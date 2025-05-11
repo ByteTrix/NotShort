@@ -12,7 +12,7 @@ if (authResult instanceof Response) {
 }
 
 // Now we can be certain we have an authenticated user
-const { session, user } = authResult;
+const { user } = authResult; // session is not used
 const userId = user.id;
 
 // Get user's links with pagination support

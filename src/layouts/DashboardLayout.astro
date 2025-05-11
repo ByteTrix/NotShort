@@ -1,109 +1,89 @@
 ---
 import Layout from './Layout.astro';
-import { supabase } from '../lib/supabaseClient';
 import { getUserProfile } from '../lib/userProfile';
+import type { User } from '@supabase/supabase-js'; // For type safety with Astro.locals.user
 
-// Get user data - but don't attempt to redirect from here
-// Redirection should happen in the page components themselves
-// First authenticate user through the Supabase Auth server
-const { data: userData } = await supabase.auth.getUser();
-const authenticatedUser = userData.user;
+// User data is expected to be populated in Astro.locals.user by the authMiddleware
+// for pages using this layout.
+const userFromLocals = (Astro.locals as any as App.Locals).user as User | undefined; // Cast to User or undefined
 
-// Then get the session data for any session-specific information
-const { data } = await supabase.auth.getSession();
-const session = data.session || null;
-
-// Use the authenticated user from getUser() for security
-const user = authenticatedUser || null;
+// If Astro.locals.user is not available, user will be null.
+// The UI (avatar, display name) should gracefully handle a null user/userProfile.
+const user = userFromLocals || null;
 
 // Use our utility to get structured user profile information
 const userProfile = getUserProfile(user);
 const avatarUrl = userProfile?.avatarUrl;
-const userDisplayName = userProfile?.displayName || 'User';
-const userEmail = user?.email || 'User';
+const userDisplayName = userProfile?.displayName || 'User'; // getUserProfile handles good defaults
 
 // Get page title from props or default
 const { title = 'Dashboard - notshort' } = Astro.props;
 ---
 
-<Layout title={title}>
-  <div class="bg-gray-50 dark:bg-gray-900 min-h-screen">
-    <!-- Dashboard Header -->
-    <header class="bg-white dark:bg-gray-800 shadow-sm">
+<Layout title={title}>  <div class="bg-gray-50 dark:bg-gray-900 min-h-screen">    <!-- Dashboard Header -->
+    <header class="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-10 backdrop-blur-sm">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="flex h-16 justify-between items-center">
-          <div class="flex-shrink-0">
-            <a href="/" class="font-mono font-bold text-xl">notshort</a>
-          </div>
-          
-          <nav class="hidden md:flex space-x-8">
-            <a href="/dashboard" class="font-mono px-3 py-2 text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white">
+          <!-- Navigation links -->
+          <nav class="flex items-center space-x-2 sm:space-x-5 lg:space-x-8 overflow-x-auto scrollbar-hide">
+            <a href="/dashboard" class="font-mono px-2 sm:px-3 py-2 text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white whitespace-nowrap text-sm">
               Dashboard
             </a>
-            <a href="/dashboard/links" class="font-mono px-3 py-2 text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white">
+            <a href="/dashboard/links" class="font-mono px-2 sm:px-3 py-2 text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white whitespace-nowrap text-sm">
               My Links
             </a>
-            <a href="/dashboard/analytics" class="font-mono px-3 py-2 text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white">
+            <a href="/dashboard/analytics" class="font-mono px-2 sm:px-3 py-2 text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white whitespace-nowrap text-sm">
               Analytics
             </a>
           </nav>
           
+          <!-- User profile & dropdown -->
           <div class="flex items-center">
             <div class="relative ml-3">
-              <div class="flex items-center">                <div class="hidden md:block">
+              <div class="flex items-center">
+                <div class="hidden md:block">
                   <span class="font-mono text-sm text-gray-600 dark:text-gray-300 mr-3">{userDisplayName}</span>
                 </div>
                 <button id="user-menu-button" type="button" class="bg-gray-800 flex text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-gray-500" aria-expanded="false" aria-haspopup="true">
-                  <span class="sr-only">Open user menu</span>
-                  {avatarUrl ? (
-                    <img src={avatarUrl} alt={userDisplayName} class="h-8 w-8 rounded-full object-cover" />
+                  <span class="sr-only">Open user menu</span>                  {avatarUrl ? (
+                    <img 
+                      src={avatarUrl} 
+                      alt={userDisplayName}
+                      class="h-8 w-8 rounded-full object-cover" 
+                      crossorigin="anonymous"
+                    />
                   ) : (
                     <div class="h-8 w-8 rounded-full bg-gray-600 text-white flex items-center justify-center font-mono">
                       {userDisplayName.charAt(0).toUpperCase()}
                     </div>
                   )}
                 </button>
-              </div>
-                <!-- Dropdown menu -->
+              </div>                <!-- Simplified dropdown menu - only profile settings and logout -->
               <div id="user-dropdown" class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white dark:bg-gray-800 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none hidden" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
-                <a href="/dashboard" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Dashboard</a>
-                <a href="/dashboard/links" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">My Links</a>
-                <a href="/dashboard/analytics" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Analytics</a>
+                <a href="/dashboard/profile" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Profile Settings</a>
                 <div class="border-t border-gray-100 dark:border-gray-700"></div>
-                <a href="/dashboard/profile" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Your Profile</a>
-                <a href="/dashboard/settings" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Settings</a>
-                <div class="border-t border-gray-100 dark:border-gray-700"></div>
-                <button id="logout-button" class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Sign out</button>
+                <button id="logout-button" class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Logout</button>
               </div>
             </div>
-            
-            <!-- Mobile menu button -->
-            <button id="mobile-menu-button" type="button" class="md:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white" aria-controls="mobile-menu" aria-expanded="false">
-              <span class="sr-only">Open main menu</span>
-              <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
           </div>
-        </div>
-      </div>
-      
-      <!-- Mobile menu, show/hide based on mobile menu state -->
-      <div id="mobile-menu" class="md:hidden hidden">
-        <div class="space-y-1 px-2 pb-3 pt-2">
-          <a href="/dashboard" class="block font-mono px-3 py-2 rounded-md text-base text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Dashboard</a>
-          <a href="/dashboard/links" class="block font-mono px-3 py-2 rounded-md text-base text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">My Links</a>
-          <a href="/dashboard/analytics" class="block font-mono px-3 py-2 rounded-md text-base text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Analytics</a>
-        </div>
-      </div>
-    </header>
-
-    <!-- Dashboard Content -->
+        </div>      </div>
+    </header>    <!-- Dashboard Content -->
     <div class="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
       <slot />
     </div>
   </div>
 </Layout>
+
+<style>
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari and Opera */
+  }
+</style>
 
 <script>
   import { supabase } from '../lib/supabaseClient';
@@ -128,13 +108,35 @@ const { title = 'Dashboard - notshort' } = Astro.props;
     if (!userMenuButton?.contains(event.target as Node) && !userDropdown?.contains(event.target as Node)) {
       userDropdown?.classList.add('hidden');
     }
+  });  // Enhanced fix for profile image loading issues
+  const handleProfileImageError = (event: Event) => {
+    const imgElement = event.target as HTMLImageElement;
+    const parent = imgElement.parentElement;
+    
+    if (parent) {
+      // Get the user's display name initial
+      const displayName = imgElement.getAttribute('alt') || 'User';
+      const initial = displayName.charAt(0).toUpperCase();
+      
+      // Create fallback avatar with initial
+      const fallbackAvatar = document.createElement('div');
+      fallbackAvatar.className = 'h-8 w-8 rounded-full bg-gray-600 text-white flex items-center justify-center font-mono';
+      fallbackAvatar.textContent = initial;
+      
+      // Replace the image with the fallback
+      parent.replaceChild(fallbackAvatar, imgElement);
+    }
+  };
+
+  // Add handler immediately for existing profile images
+  document.querySelectorAll('img[crossorigin="anonymous"]').forEach(img => {
+    img.addEventListener('error', handleProfileImageError);
   });
   
-  // Mobile menu toggle
-  const mobileMenuButton = document.getElementById('mobile-menu-button');
-  const mobileMenu = document.getElementById('mobile-menu');
-  
-  mobileMenuButton?.addEventListener('click', () => {
-    mobileMenu?.classList.toggle('hidden');
+  // Also add handler after DOM is fully loaded to catch any dynamically added images
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('img[crossorigin="anonymous"]').forEach(img => {
+      img.addEventListener('error', handleProfileImageError);
+    });
   });
 </script>

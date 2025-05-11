@@ -52,16 +52,18 @@ if (slug) {
 }
 ---
 
-<Layout title={notFound ? "Link Not Found - notshort" : "Redirecting - notshort"}>
+<Layout title={notFound ? `Oops! Slug '${slug}' Not Found - notshort` : "Redirecting - notshort"}>
   <div class="flex flex-col items-center justify-center min-h-screen p-6">
     {notFound ? (
-      <div class="text-center">
-        <h1 class="text-4xl font-bold mb-6">404: Link Not Found</h1>
-        <p class="mb-8 max-w-md mx-auto">
-          The unnecessarily long URL you're trying to access doesn't exist. Perhaps it was too long even for us?
+      <div class="flex flex-col items-center justify-center text-center py-10">
+        <div class="text-7xl font-mono font-bold text-gray-800 dark:text-gray-200 mb-8">404</div>
+        <h1 class="text-3xl font-mono font-bold text-gray-800 dark:text-gray-200 mb-4">Blast! This Short Link Went Long... on Missing.</h1>
+        <p class="text-xl text-gray-600 dark:text-gray-400 mb-12 max-w-lg">
+          The specific short link <code class="bg-gray-200 dark:bg-gray-700 px-1 py-0.5 rounded text-lg">/{slug}</code> appears to have wandered off.
+          Maybe it's contemplating the existential nature of brevity? Or perhaps it just doesn't exist.
         </p>
-        <a href="/" class="bg-gray-800 text-white px-6 py-3 inline-block font-mono hover:bg-gray-700">
-          Go Home
+        <a href="/" class="px-8 py-3 bg-gray-800 text-white font-mono hover:bg-gray-700 transition-colors">
+          Back to Homepage
         </a>
       </div>
     ) : (
@@ -78,7 +80,7 @@ if (slug) {
   </div>
 </Layout>
 
-<script define:vars={{ redirectUrl, notFound }}>
+<script is:inline define:vars={{ redirectUrl, notFound }}>
   // Only redirect if we have a valid URL
   if (redirectUrl && !notFound) {
     setTimeout(() => {

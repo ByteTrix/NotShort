@@ -1,0 +1,162 @@
+---
+import { getGithubUser, type GitHubUser } from '../lib/github';
+
+interface Props {
+  username: string;
+  name: string;
+  quote: string;
+}
+
+const { username, name,  quote } = Astro.props;
+let founderData: GitHubUser | null = null;
+let avatarUrl = "/founder-avatar.png"; // Default or fallback avatar
+
+if (import.meta.env.PROD || import.meta.env.DEV) { // Ensure this runs server-side
+  founderData = await getGithubUser(username);
+  if (founderData?.avatar_url) {
+    avatarUrl = founderData.avatar_url;
+  }
+}
+---
+
+<div class="group relative flex flex-col items-center text-center p-6 md:p-8 max-w-sm mx-auto bg-gradient-to-br from-purple-800/80 via-gray-900/80 to-indigo-800/80 border border-purple-600/60 rounded-xl shadow-2xl transition-all duration-300 ease-out hover:shadow-purple-500/40 hover:border-purple-500 hover:scale-[1.03]">
+  <div class="absolute -top-2 -right-2 w-full h-full bg-gradient-to-br from-purple-600/15 via-transparent to-indigo-600/15 opacity-0 group-hover:opacity-50 transition-opacity duration-500 ease-out z-0 rounded-xl blur-md group-hover:blur-lg"></div>
+  <div class="relative mb-4 md:mb-5">
+    <img
+      src={avatarUrl}
+      alt={`Avatar of ${name}`}
+      class="relative z-10 w-24 h-24 md:w-28 md:h-28 rounded-full border-4 border-purple-500 group-hover:border-purple-400 transition-all duration-300 ease-out group-hover:scale-110 shadow-lg group-hover:shadow-purple-600/50"
+      loading="lazy"
+      width="112"
+      height="112"
+    />
+    <div
+      class="absolute -top-3 -left-3 md:-top-4 md:-left-4 z-20"
+      aria-label="Founder and Investor badge"
+    >
+      <div class="flex items-center space-x-2 px-3 py-1.5 bg-gradient-to-br from-slate-700 via-slate-800 to-slate-700 rounded-full shadow-xl border-2 border-slate-600 founder-seal-badge-revamped hover:from-slate-600 hover:to-slate-600 transition-all duration-200">
+        <span class="w-5 h-5 md:w-6 md:h-6 flex-shrink-0 text-yellow-400">
+          <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="0.5" result="coloredBlur"/>
+                <feMerge>
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+            </defs>
+            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27z" filter="url(#glow)"/>
+          </svg>
+        </span>
+      </div>
+    </div>
+  </div>
+  <div class="relative z-10">
+    <h3 class="font-mono text-lg md:text-xl font-bold text-gray-50 group-hover:text-purple-100 transition-colors duration-300 mb-1 md:mb-1.5">{name}</h3>
+    {quote && <p class="text-sm text-gray-300/90 italic mt-3 md:mt-4 leading-relaxed">"{quote}"</p>}
+  </div>
+</div>
+<div class="mt-6 text-center">
+  <p class="handwritten-signature text-gray-300 group-hover:text-gray-300 transition-colors duration-300">
+    {/* Suggestion: Replace with actual signature SVG or a more unique handwritten font */}
+    ~ The Founder and Investor ~
+  </p>
+</div>
+
+<style>
+/* General card improvements */
+.group:hover .handwritten-signature {
+  color: #c4b5fd; /* Light purple on hover, matching theme */
+}
+
+.handwritten-signature {
+  font-family: 'Caveat', 'Dancing Script', cursive; /* Common handwritten fonts */
+  font-size: 1rem; /* Slightly larger */
+  font-weight: 200;
+  letter-spacing: 0.05em;
+  opacity: 0.85;
+  transition: color 0.3s ease-out, opacity 0.3s ease-out;
+}
+
+@media (min-width: 768px) {
+  .handwritten-signature {
+    font-size: 1rem;
+  }
+}
+
+
+/* Seal specific styles - keeping some old ones if they are still relevant or for reference */
+.founder-seal { /* This class seems unused in the new HTML, can be removed or repurposed */
+  display: inline-block;
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 30;
+  filter: drop-shadow(0 2px 8px #a78bfa88);
+  transition: transform 0.3s cubic-bezier(.4,0,.2,1), filter 0.3s;
+}
+
+.animate-seal-pop { /* This class seems unused, animation is now part of founderSealEntry */
+  animation: sealPop 1.2s cubic-bezier(.23,1,.32,1) 1;
+}
+@keyframes sealPop { /* This keyframe seems unused */
+  0% { transform: scale(0.7) rotate(-10deg); opacity: 0; }
+  60% { transform: scale(1.15) rotate(6deg); opacity: 1; }
+  80% { transform: scale(0.97) rotate(-2deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.founder-seal-badge-revamped {
+  /* Replaces .founder-seal-badge */
+  /* Styles are mostly inline now for the badge:
+     bg-gradient-to-br from-slate-700 via-slate-800 to-slate-700
+     rounded-full shadow-xl border-2 border-slate-600
+     hover:from-slate-600 hover:to-slate-600
+  */
+  animation: founderSealEntry 0.8s cubic-bezier(0.25, 0.1, 0.25, 1) 0.2s both;
+  transform-origin: center;
+}
+
+.founder-seal-text-revamped {
+  /* Replaces .founder-seal-text */
+  /* Styles are mostly inline now for the text:
+    text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-purple-300
+    font-bold tracking-wider
+  */
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+
+@keyframes founderSealEntry {
+  0% {
+    transform: scale(0.5) translateY(10px) rotate(-15deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.1) translateY(-2px) rotate(5deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+
+/* Old .founder-seal-badge, .founder-seal-icon, .founder-seal-text, .founder-seal-badge-edge can be removed if not used elsewhere */
+/* Keeping pulse-slow for now, but it's not applied to the new seal */
+@keyframes pulse-slow {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.05);
+      opacity: 0.85;
+    }
+  }
+  .animate-pulse-slow { /* This class is not used on the new seal */
+    animation: pulse-slow 3s ease-in-out infinite;
+  }
+</style>

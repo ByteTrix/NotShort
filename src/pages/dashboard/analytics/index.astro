@@ -220,9 +220,8 @@ const topLinks = [...(links || [])].sort((a, b) => (b.clicks || 0) - (a.clicks |
   </div>
 </DashboardLayout>
 
-<script define:vars={{ chartLabels, chartData }}>
+<script is:inline define:vars={{ chartLabels, chartData }}>
   // Import Chart.js from CDN
-  import { supabase } from '../../../lib/supabaseClient';
   // The Chart variable is loaded from the CDN script,
   // so we can tell TypeScript to ignore the "cannot find name" error.
   // @ts-ignore

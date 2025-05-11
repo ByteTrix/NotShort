@@ -2,3 +2,4 @@ ignoredBuiltDependencies:
   - sharp
 onlyBuiltDependencies:
   - esbuild
+  - supabase
