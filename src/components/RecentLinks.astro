@@ -40,17 +40,42 @@ const siteUrl = import.meta.env.SITE ;
           {(links as RecentLink[]).map((link: RecentLink) => (
             <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"> {/* Adjusted hover */}
               <td class="py-4 px-6 align-middle"> {/* Increased padding, vertical align */}
-                <div class="truncate max-w-[250px]"> {/* Slightly increased max-width */}
-                  <a href={link.original} target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline truncate" title={link.original}> {/* Consistent link color, added title */}
-                    {link.original}
-                  </a>
+                <div class="truncate max-w-[250px]"> {/* No hover group, just masking */}
+                  <span tabindex="-1" class="pointer-events-none cursor-not-allowed text-blue-400 dark:text-blue-600 opacity-60 truncate" title="Masked for privacy">
+                    {(() => {
+                      let url = link.original;
+                      // Remove protocol (http:// or https://)
+                      url = url.replace(/^https?:\/\//, '');
+                      // Regex to find the last dot and extension (e.g., .com, .in, .org)
+                      const urlMatch = url.match(/(.*)(\.[a-zA-Z]{2,})(\/?[^\/]*)?$/);
+                      if (!urlMatch || url.length <= 16) return '###***@!$' + url.slice(-8); // Always mask short URLs too
+                      const prefix = urlMatch[1];
+                      const ext = urlMatch[2] + (urlMatch[3] || '');
+                      // Mask first, middle, and last letter of the domain part with more chars/symbols
+                      if (prefix.length < 3) return '@!$%&*' + ext;
+                      let chars = prefix.split('');
+                      const mid = Math.floor((chars.length - 1) / 2);
+                      chars[0] = '@';
+                      chars[mid] = '!';
+                      chars[chars.length - 1] = '$';
+                      for (let i = 1; i < chars.length - 1; i++) {
+                        chars[i] = (i !== mid) ? '*' : chars[i]
+                      }
+                      return chars.join('') + ext;
+                    })()}
+                  </span>
                 </div>
               </td>
               <td class="py-4 px-6 align-middle">
                  <div class="truncate max-w-[350px]"> {/* Slightly increased max-width */}
-                  <a href={`${siteUrl}/${link.slug}`} target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline truncate" title={`${siteUrl}/${link.slug}`}> {/* Consistent link color, added title */}
-                    {`${siteUrl}/${link.slug}`}
-                  </a>
+                  <span class="text-black-400 dark:text-blue-500 select-none" title="Copy/redirect disabled">
+                    {(() => {
+                      let fullLong = `${siteUrl}/${link.slug}`;
+                      // Remove protocol (http:// or https://)
+                      fullLong = fullLong.replace(/^https?:\/\//, '');
+                      return fullLong.length > 35 ? fullLong.substring(0, 32) + '...' : fullLong;
+                    })()}
+                  </span>
                 </div>
               </td>
               <td class="py-4 px-6 text-gray-600 dark:text-gray-400 whitespace-nowrap align-middle">

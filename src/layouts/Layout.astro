@@ -7,10 +7,19 @@ interface Props {
 }
 
 const { title } = Astro.props;
+// Define main navigation links - conditional links like Dashboard and Logout will be handled with JavaScript
 const navLinks = { 
-	"/":"Home",
+	// "/":"Home",
 	"/blog":"Blog",
 	"/about":"About"
+}
+
+// Auth links will be conditionally shown/hidden via JavaScript
+const authLinks = {
+	login: { href: "/login", text: "Sign in" },
+	signup: { href: "/signup", text: "Sign up" },
+	dashboard: { href: "/dashboard", text: "Dashboard" },
+	logout: { text: "Logout" }
 }
 const gaMeasurementIdExists = !!import.meta.env.PUBLIC_GA_MEASUREMENT_ID;
 ---
@@ -41,18 +50,44 @@ const gaMeasurementIdExists = !!import.meta.env.PUBLIC_GA_MEASUREMENT_ID;
 	<body>
 		<nav class="border-b-1 border-b-gray-200">
 			<div class="flex items-center justify-between border-x-1 border-gray-200 pl-5 wrapper mx-auto">
-					<a href="/" class="flex items-center py-2">
+				<a href="/" class="flex items-center py-2">
 					<h1 class="font-mono text-lg sm:text-xl text-gray-900 dark:text-gray-100">NOTSHORT</h1>
 				</a>
-				<div class="flex items-center">
-					<ul class={`grid grid-auto-flow-col`}>
+				<div class="flex items-center">					<ul class="flex space-x-4">
 						{Object.entries(navLinks).map(([href, title]) => {
-							return <li class="grid-col-[span_1] block">
-								<a href={href} class="text-sm px-5 py-8 tracking-0.1 block">{title}</a>
+							return <li>
+								<a href={href} class="text-sm px-3 py-5 tracking-0.1 block">{title}</a>
 							</li>
 						})}
+						<li id="dashboard-nav-item" class="hidden">
+							<a href="/dashboard" class="text-sm px-3 py-5 tracking-0.1 block">Dashboard</a>
+						</li>
 					</ul>
 					
+					<!-- Authentication links -->
+					<div id="auth-links" class="ml-4 flex items-center border-l border-gray-200 dark:border-gray-700 pl-4">
+						<a href="/login" id="login-link" class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hidden px-3 py-5">Sign in</a>
+						<a href="/signup" id="signup-link" class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hidden px-3 py-5">Sign up</a>
+						<button id="logout-btn" class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 text-left hidden px-3 py-5">Logout</button>
+					</div>
+				</div>
+			</div>
+					<!-- Mobile menu, hidden by default -->
+			<div id="mobile-menu" class="md:hidden hidden border-t border-gray-200 dark:border-gray-700">
+				<div class="px-2 pt-2 pb-3 space-y-1">
+					{Object.entries(navLinks).map(([href, title]) => (
+						<a href={href} class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white">
+							{title}
+						</a>
+					))}
+					<div id="mobile-dashboard-nav-item" class="hidden">
+						<a href="/dashboard" class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Dashboard</a>
+					</div>
+					<div class="border-t border-gray-200 dark:border-gray-700 mt-2 pt-2">
+						<a href="/login" id="mobile-login-link" class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hidden">Sign in</a>
+						<a href="/signup" id="mobile-signup-link" class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hidden">Sign up</a>
+						<button id="mobile-logout-btn" class="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hidden">Logout</button>
+					</div>
 				</div>
 			</div>
 		</nav>
@@ -62,27 +97,26 @@ const gaMeasurementIdExists = !!import.meta.env.PUBLIC_GA_MEASUREMENT_ID;
 		{/* Container for toast notifications, managed by toastService.ts */}
 		<div id="toast-notifications-container" class="fixed top-0 right-0 z-50 p-4 space-y-2"></div>
 		<Footer />
-				<script>
+		<script>
 			import { supabase } from '../lib/supabaseClient';
-			
-			// Desktop elements
+					// Desktop elements
 			const loginLink = document.getElementById('login-link');
 			const signupLink = document.getElementById('signup-link');
-			const dashboardLink = document.getElementById('dashboard-link');
 			const logoutBtn = document.getElementById('logout-btn');
 			
 			// Mobile elements
 			const mobileLoginLink = document.getElementById('mobile-login-link');
 			const mobileSignupLink = document.getElementById('mobile-signup-link');
-			const mobileDashboardLink = document.getElementById('mobile-dashboard-link');
 			const mobileLogoutBtn = document.getElementById('mobile-logout-btn');
 			
 			// Mobile menu elements
 			const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
 			const mobileMenu = document.getElementById('mobile-menu');
+			const navbarContent = document.getElementById('navbar-content');
 			
 			// Mobile menu toggle
 			mobileMenuToggle?.addEventListener('click', () => {
+				navbarContent?.classList.toggle('hidden');
 				mobileMenu?.classList.toggle('hidden');
 			});
 			
@@ -96,8 +130,7 @@ const gaMeasurementIdExists = !!import.meta.env.PUBLIC_GA_MEASUREMENT_ID;
 					mobileMenu.classList.add('hidden');
 				}
 			});
-			
-			// Check auth status and update UI
+					// Check auth status and update UI
 			async function updateAuthUI() {
 				// First authenticate user securely through the Supabase Auth server
 				const { data: userData } = await supabase.auth.getUser();
@@ -106,30 +139,34 @@ const gaMeasurementIdExists = !!import.meta.env.PUBLIC_GA_MEASUREMENT_ID;
 				// Use authenticated user status as the source of truth
 				const isLoggedIn = !!userData.user;
 				
+				// Get dashboard nav items
+				const dashboardNavItem = document.getElementById('dashboard-nav-item');
+				const mobileDashboardNavItem = document.getElementById('mobile-dashboard-nav-item');
+				
 				if (isLoggedIn) {
 					// User is logged in - Desktop
 					loginLink?.classList.add('hidden');
 					signupLink?.classList.add('hidden');
-					dashboardLink?.classList.remove('hidden');
 					logoutBtn?.classList.remove('hidden');
+					dashboardNavItem?.classList.remove('hidden');
 					
 					// User is logged in - Mobile
 					mobileLoginLink?.classList.add('hidden');
 					mobileSignupLink?.classList.add('hidden');
-					mobileDashboardLink?.classList.remove('hidden');
 					mobileLogoutBtn?.classList.remove('hidden');
+					mobileDashboardNavItem?.classList.remove('hidden');
 				} else {
 					// User is not logged in - Desktop
 					loginLink?.classList.remove('hidden');
 					signupLink?.classList.remove('hidden');
-					dashboardLink?.classList.add('hidden');
 					logoutBtn?.classList.add('hidden');
+					dashboardNavItem?.classList.add('hidden');
 					
 					// User is not logged in - Mobile
 					mobileLoginLink?.classList.remove('hidden');
 					mobileSignupLink?.classList.remove('hidden');
-					mobileDashboardLink?.classList.add('hidden');
 					mobileLogoutBtn?.classList.add('hidden');
+					mobileDashboardNavItem?.classList.add('hidden');
 				}
 			}
 			
@@ -160,9 +197,17 @@ const gaMeasurementIdExists = !!import.meta.env.PUBLIC_GA_MEASUREMENT_ID;
 	body {
 		display: flex;
 		flex-flow: column;
-	}
-	body > main {
+	}	body > main {
 		flex: 1;
+	}
+	
+	/* Hide scrollbar but keep functionality */
+	.scrollbar-hide {
+		-ms-overflow-style: none;  /* IE and Edge */
+		scrollbar-width: none;  /* Firefox */
+	}
+	.scrollbar-hide::-webkit-scrollbar {
+		display: none;  /* Chrome, Safari and Opera */
 	}
 	.content-wrapper {
         :is(h2,h3,h4,h5,h6) {

@@ -1,4 +1,4 @@
-/// <reference path="../.astro/types.d.ts" />
+/// <reference types="astro/client" />
 
 interface ImportMetaEnv {
   readonly PUBLIC_SUPABASE_URL: string;
@@ -12,11 +12,12 @@ interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
 
-// Add user type to Astro.locals
 import type { User } from '@supabase/supabase-js';
 
-declare namespace App {
-  interface Locals {
-    user?: User;
+declare global {
+  namespace App {
+    interface Locals {
+      user: User | null;
+    }
   }
 }

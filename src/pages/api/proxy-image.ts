@@ -39,6 +39,6 @@ export const GET: APIRoute = async ({ request }) => {
     });
   } catch (error) {
     console.error('Image proxy error:', error);
-    return new Response(`Internal server error: ${error.message}`, { status: 500 });
+    return new Response(`Internal server error: ${(error as Error).message}`, { status: 500 });
   }
 };

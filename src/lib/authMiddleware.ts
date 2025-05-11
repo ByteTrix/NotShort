@@ -1,6 +1,7 @@
+/// <reference path="../env.d.ts" />
 import type { AstroGlobal } from 'astro';
 import { createSupabaseServerClient } from './supabaseClient';
-import type { User } from '@supabase/supabase-js';
+
 
 /**
  * Authentication middleware for protected pages
@@ -49,7 +50,7 @@ export async function requireAuth(Astro: AstroGlobal) {
 
   // Make the user object available in Astro.locals for other parts of the application (e.g., layouts)
   // userData.user is of type User, which matches Astro.locals.user type User | null
-  Astro.locals.user = userData.user;
+  (Astro.locals as any as App.Locals).user = userData.user;
   
   // console.log(`[authMiddleware] Authentication successful for ${Astro.url.pathname}. User ID:`, userData.user.id);
   // Return the session and the user object (which is userData.user)

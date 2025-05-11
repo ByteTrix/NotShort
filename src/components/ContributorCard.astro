@@ -10,7 +10,7 @@ const { login, avatar_url, html_url } = Astro.props;
 
 <div class="contributor-card flex flex-col items-center p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out border border-gray-200 dark:border-gray-700">
   <a href={html_url} target="_blank" rel="noopener noreferrer" class="block mb-4">
-    <img src={avatar_url} alt={`Avatar of ${login}`} class="w-24 h-24 rounded-full border-4 border-accent dark:border-accent-light shadow-md hover:scale-105 transition-transform duration-300" />
+    <img src={avatar_url} alt={`Avatar of ${login}`} class="w-24 h-24 rounded-full border-4 border-accent dark:border-accent-light shadow-md hover:scale-105 transition-transform duration-300 floating-avatar" />
   </a>
   <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-1">
     <a href={html_url} target="_blank" rel="noopener noreferrer" class="hover:text-accent dark:hover:text-accent-light transition-colors">
@@ -35,5 +35,18 @@ const { login, avatar_url, html_url } = Astro.props;
 
 .dark .contributor-card img {
  /* border-color: var(--accent-light); already applied via class */
+}
+
+.floating-avatar {
+  animation: floaty 1.8s cubic-bezier(0.4, 0.0, 0.2, 1) infinite alternate;
+  box-shadow: 0 12px 36px 0 rgba(0,0,0,0.22), 0 2px 8px 0 rgba(0,0,0,0.13);
+}
+
+@keyframes floaty {
+  0% { transform: translateY(0) scale(1) rotate(-2deg); filter: brightness(1.05); }
+  20% { transform: translateY(-18px) scale(1.08) rotate(-6deg); filter: brightness(1.12); }
+  50% { transform: translateY(14px) scale(0.96) rotate(5deg); filter: brightness(0.93); }
+  70% { transform: translateY(-10px) scale(1.06) rotate(-3deg); filter: brightness(1.08); }
+  100% { transform: translateY(0) scale(1) rotate(0deg); filter: brightness(1); }
 }
 </style>

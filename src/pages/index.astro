@@ -8,7 +8,6 @@ import RecentLinks from '../components/RecentLinks.astro';
 import FounderCard from '../components/FounderCard.astro'; // Import the new FounderCard component
 import { getRepoStats, getRepoUrl, getRepoContributors } from '../lib/github'; // Import getRepoUrl and getRepoContributors
 import type { ContributorData } from '../lib/github'; // Import ContributorData interface
-import ContributorCard from '../components/ContributorCard.astro'; // Import ContributorCard
 import { createSupabaseServerClient } from '../lib/supabaseClient';
 import CountUp from "../components/CountUp.astro"; // For animated numbers
 
@@ -96,7 +95,7 @@ try {
 const newStats = [
   { title: "URLs Generated", value: generatedUrlsCount, unit: "", by: "" },
   { title: "Active Users", value: activeUsersCount, unit: "", by: "" },
-  { title: "GitHub Stars", value: repoStats?.stars ?? 'N/A', unit: "✨", by: "" },
+  { title: "GitHub Stars", value: repoStats?.stars ?? 'N/A', unit: "", by: "" },
 ];
 
 const contributorsPageUrl = `${getRepoUrl()}/graphs/contributors`;
@@ -105,16 +104,17 @@ const contributorsPageUrl = `${getRepoUrl()}/graphs/contributors`;
   <Header gridBg>
     <div class="text-center py-12 md:py-35">
  
-      <p class="font-mono text-sm text-gray-600 dark:text-gray-400 mb-2 animate-fade-in">
+      <p class="font-mono text-sm text-gray-600 dark:text-gray-400 mb-2">
         The only site that makes your links longer, not shorter. Because size matters.</p>
-      <h1 class="text-6xl md:text-7xl font-serif font-extrabold mb-6 text-gray-900 dark:text-white drop-shadow-lg animate-fade-in-slow">
+      <h1 class="text-6xl md:text-7xl font-serif font-bold mb-6 text-gray-900 dark:text-white ">
         NotShort
       </h1>
-      <p class="text-lg text-gray-800 dark:text-gray-300 max-w-2xl mx-auto mb-10 animate-fade-in-delay">
+      <p class="text-lg text-gray-800 dark:text-gray-300 max-w-2xl mx-auto mb-10">
          Welcome to the world's most over-engineered url <span class="line-through">shortener</span> <span class="text-accent font-bold">lengthener</span>.<br/>
-        We take your short links and make them as long, confusing, and inefficient as possible. Why be short when you can be NotShort? (Yes, we are serious. Unfortunately.)
+        We take your short links and make them as long, confusing, and inefficient as possible. Why be short when you can be NotShort?<br/>
+         (Yes, we are serious. Unfortunately.)
       </p>
-      <div class="mt-12 max-w-lg mx-auto animate-fade-in-delay2">
+      <div class="mt-10 max-w-[35.8rem] mx-auto">
         <LongifyForm />
       </div>
     </div>
@@ -203,7 +203,7 @@ const contributorsPageUrl = `${getRepoUrl()}/graphs/contributors`;
       These brave souls write code that makes URLs longer instead of shorter. They still don't understand the assignment.</p>    <div class="contributors-avatars flex flex-wrap justify-center gap-4 md:gap-6 lg:gap-8 w-full">
       {liveContributors.length > 0 ? (
         liveContributors.map(contributor => (
-          <a href={contributor.html_url} target="_blank" rel="noopener noreferrer" class="contributor-avatar-wrapper" title={contributor.login}>
+          <a href={contributor.html_url} target="_blank" rel="noopener noreferrer" class="contributor-avatar-wrapper floating-contributor" title={contributor.login}>
             <img 
               src={contributor.avatar_url} 
               alt={`${contributor.login}`} 
@@ -215,7 +215,7 @@ const contributorsPageUrl = `${getRepoUrl()}/graphs/contributors`;
       ) : (
         repoStats?.contributors.length > 0 ? (
           repoStats.contributors.slice(0, 8).map(contributor => ( // Show more contributors, up to 8
-            <a href={contributor.url} target="_blank" rel="noopener noreferrer" class="contributor-avatar-wrapper" title={contributor.name}>
+            <a href={contributor.url} target="_blank" rel="noopener noreferrer" class="contributor-avatar-wrapper floating-contributor" title={contributor.name}>
               <img 
                 src={contributor.avatar} 
                 alt={`${contributor.name}`} 
@@ -231,7 +231,6 @@ const contributorsPageUrl = `${getRepoUrl()}/graphs/contributors`;
         )
       )}
     </div>
-  </div>
 </Section>
 
     <SectionSpacer size='md'/>
@@ -459,10 +458,13 @@ const contributorsPageUrl = `${getRepoUrl()}/graphs/contributors`;
 .premium-stats {
   gap: 1rem;
   padding: 1.5rem 0;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
 }
 
 /* Enhanced modern stats cards */
-.modern-stats-card {
+/* .modern-stats-card {
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(8px);
   border-radius: 0.5rem;
@@ -470,13 +472,13 @@ const contributorsPageUrl = `${getRepoUrl()}/graphs/contributors`;
   position: relative;
   z-index: 1;
   padding: 2rem;
-}
+} */
 
-.dark .modern-stats-card {
+/* .dark .modern-stats-card {
   background: rgba(30, 41, 59, 0.7);
-}
+} */
 
-.modern-stats-card::before {
+/* .modern-stats-card::before {
   content: '';
   position: absolute;
   top: 0;
@@ -488,11 +490,11 @@ const contributorsPageUrl = `${getRepoUrl()}/graphs/contributors`;
   transition: var(--transition-smooth);
   z-index: -1;
   border-radius: 0.5rem;
-}
+} */
 
-.modern-stats-card:hover::before {
+/* .modern-stats-card:hover::before {
   opacity: 1;
-}
+} */
 
 .modern-stats-number {
   font-size: 3rem;
@@ -870,5 +872,23 @@ const contributorsPageUrl = `${getRepoUrl()}/graphs/contributors`;
   .why-list {
     grid-template-columns: repeat(3, 1fr);
   }
+}
+
+/* Floating animation for contributor icons */
+.floating-contributor {
+  animation: floaty-contrib 3.5s ease-in-out infinite;
+  will-change: transform, filter;
+  transition: box-shadow 0.3s;
+}
+.floating-contributor:hover {
+  z-index: 2;
+  box-shadow: 0 8px 32px 0 rgba(0,0,0,0.18), 0 1.5px 6px 0 rgba(0,0,0,0.10);
+  filter: brightness(1.12) drop-shadow(0 0 8px #60a5fa);
+  transform: scale(1.08) translateY(-10px) rotate(-3deg);
+}
+@keyframes floaty-contrib {
+  0% { transform: translateY(0) scale(1); filter: brightness(1.04); }
+  50% { transform: translateY(-10px) scale(1.03); filter: brightness(1.08); }
+  100% { transform: translateY(0) scale(1); filter: brightness(1.04); }
 }
 </style>

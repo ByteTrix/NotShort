@@ -15,7 +15,7 @@ const typeClasses = {
   info: "bg-blue-500",
 };
 
-const toastId = `toast-${Math.random().toString(36).substr(2, 9)}`;
+const toastId = `toast-${Math.random().toString(36).substring(2, 11)}`;
 ---
 
 <div
@@ -37,7 +37,7 @@ const toastId = `toast-${Math.random().toString(36).substr(2, 9)}`;
   </div>
 </div>
 
-<script define:vars={{ toastId }}>
+<script is:inline define:vars={{ toastId }}>
   const toastElement = document.getElementById(toastId);
   if (toastElement) {
     // Animate in

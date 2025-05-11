@@ -1,12 +1,11 @@
 ---
 import Layout from './Layout.astro';
-import { supabase } from '../lib/supabaseClient';
 import { getUserProfile } from '../lib/userProfile';
 import type { User } from '@supabase/supabase-js'; // For type safety with Astro.locals.user
 
 // User data is expected to be populated in Astro.locals.user by the authMiddleware
 // for pages using this layout.
-const userFromLocals = Astro.locals.user as User | undefined; // Cast to User or undefined
+const userFromLocals = (Astro.locals as any as App.Locals).user as User | undefined; // Cast to User or undefined
 
 // If Astro.locals.user is not available, user will be null.
 // The UI (avatar, display name) should gracefully handle a null user/userProfile.
@@ -27,9 +26,6 @@ const { title = 'Dashboard - notshort' } = Astro.props;
         <div class="flex h-16 justify-between items-center">
           <!-- Navigation links -->
           <nav class="flex items-center space-x-2 sm:space-x-5 lg:space-x-8 overflow-x-auto scrollbar-hide">
-            <a href="/" class="font-mono text-sm px-2 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 whitespace-nowrap border-r pr-3 mr-1">
-              Home
-            </a>
             <a href="/dashboard" class="font-mono px-2 sm:px-3 py-2 text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white whitespace-nowrap text-sm">
               Dashboard
             </a>
