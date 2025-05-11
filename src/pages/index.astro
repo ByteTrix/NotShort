@@ -3,10 +3,12 @@ import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Section from '../components/Section.astro';
 import SectionSpacer from '../components/SectionSpacer.astro';
-import InvestorGrid from '../components/InvestorGrid.astro';
 import LongifyForm from '../components/LongifyForm.astro';
 import RecentLinks from '../components/RecentLinks.astro';
-import { getRepoStats, getRepoUrl } from '../lib/github'; // Import getRepoUrl
+import FounderCard from '../components/FounderCard.astro'; // Import the new FounderCard component
+import { getRepoStats, getRepoUrl, getRepoContributors } from '../lib/github'; // Import getRepoUrl and getRepoContributors
+import type { ContributorData } from '../lib/github'; // Import ContributorData interface
+import ContributorCard from '../components/ContributorCard.astro'; // Import ContributorCard
 import { createSupabaseServerClient } from '../lib/supabaseClient';
 import CountUp from "../components/CountUp.astro"; // For animated numbers
 
@@ -17,6 +19,7 @@ let activeUsersCount: number | string = 'N/A';
 // let githubStarsCount: number | string = 'N/A'; // Will get this from repoStats
 import type { RepoStats } from '../lib/github'; // Import the interface
 let repoStats: RepoStats | null = null; // Store the full stats object
+let liveContributors: ContributorData[] = []; // Store live contributors
 
 // Simple in-memory cache for user count
 const USER_COUNT_CACHE_DURATION_MS = 60 * 60 * 1000; // 60 minutes
@@ -83,6 +86,13 @@ try {
   };
 }
 
+try {
+  liveContributors = await getRepoContributors();
+} catch (e: any) {
+  console.error('Error fetching live GitHub contributors:', e.message);
+  // liveContributors will remain an empty array
+}
+
 const newStats = [
   { title: "URLs Generated", value: generatedUrlsCount, unit: "", by: "" },
   { title: "Active Users", value: activeUsersCount, unit: "", by: "" },
@@ -91,241 +101,774 @@ const newStats = [
 
 const contributorsPageUrl = `${getRepoUrl()}/graphs/contributors`;
 ---
-
 <Layout title="NotShort – A Parody Link Longner">
   <Header gridBg>
-    <div class="text-center py-12 md:py-35"> {/* Added padding for better spacing */}
-      <p class="font-mono text-sm text-gray-600 dark:text-gray-400 mb-2"> {/* Adjusted tagline styling */}
-        The best site that makes your links longer, not shorter!
-      </p>
-      <h1 class="text-6xl md:text-7xl font-serif font-bold mb-6 text-gray-900 dark:text-white"> {/* Larger, serif font for title */}
+    <div class="text-center py-12 md:py-35">
+ 
+      <p class="font-mono text-sm text-gray-600 dark:text-gray-400 mb-2 animate-fade-in">
+        The only site that makes your links longer, not shorter. Because size matters.</p>
+      <h1 class="text-6xl md:text-7xl font-serif font-extrabold mb-6 text-gray-900 dark:text-white drop-shadow-lg animate-fade-in-slow">
         NotShort
       </h1>
-      <p class="text-lg text-gray-700 dark:text-gray-300 max-w-xl mx-auto mb-8"> {/* Slightly larger subtitle */}
-        Welcome to the world's most well developed url <span class="line-through">shortener</span> <span class="text-accent font-medium">lengthener</span>. We take your short links and make them as long and ridiculous as possible. Why be short when you can be not short ? (Get it ? "NotShort")
+      <p class="text-lg text-gray-800 dark:text-gray-300 max-w-2xl mx-auto mb-10 animate-fade-in-delay">
+         Welcome to the world's most over-engineered url <span class="line-through">shortener</span> <span class="text-accent font-bold">lengthener</span>.<br/>
+        We take your short links and make them as long, confusing, and inefficient as possible. Why be short when you can be NotShort? (Yes, we are serious. Unfortunately.)
       </p>
-      <div class="mt-10 max-w-lg mx-auto"> {/* Added max-width to form container */}
+      <div class="mt-12 max-w-lg mx-auto animate-fade-in-delay2">
         <LongifyForm />
       </div>
     </div>
   </Header>
-  
-  <main>
-    <!-- Recent Links Section (Real data) -->
-    <RecentLinks />
-    
-    <SectionSpacer size="md" />
-    
-    <!-- Stats Grid with real statistics -->
-    <Section fullWidthBorder={false}>
-      <div class="text-center py-8"> {/* Added padding */}
-        <h2 class="title mb-4">Our Global Impact on URL Verbosity</h2> {/* More "corporate" heading */}
-        <p class="subtitle-small max-w-2xl mx-auto">
-          Witness the staggering growth of unnecessarily elongated links across the digital expanse. We're revolutionizing inefficiency, one character at a time.
-        </p> {/* Humorous sub-description */}
-      </div>
-    </Section>
-    <!-- New Stats Display -->
-    <Section class="py-0" padBlock={false}>
-      <ul class="inherit-content-container grid lg:grid-cols-[repeat(3,1fr)] grid-auto-rows-[200px] place-center">
-        {newStats.map(({ title, value, unit }) => (
-          <li class="flex flex-col justify-center text-center border-r-1 border-r-gray-200 dark:border-r-gray-700 last:border-r-0 px-4">
-            {typeof value === 'number' ? (
-              <CountUp class="text-8 md:text-10 font-mono" start={0} end={value} unit={unit} />
-            ) : (
-              <span class="text-8 md:text-10 font-mono">{value}{unit}</span>
-            )}
-            <p class="text-md mt-2">{title}</p>
-          </li>
-        ))}
-      </ul>
-    </Section>
-    
-    <SectionSpacer size="md" />
-    
-    <!-- GitHub Contributors Section -->
-    <Section index source="contributors.md" fullWidthBorder variant="dark">
-      <div class="lg:w-[70%] md:w-[80%] mx-auto">
-        <h2 class="title mb-8">Our Confused Contributors</h2>
-        <p class="subtitle-small mb-8">These brave souls write code that makes URLs longer instead of shorter. They still don't understand the assignment.</p>
-        
-        {repoStats && repoStats.contributors && repoStats.contributors.length > 0 ? (
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-10 mb-16"> {/* Adjusted grid and gaps */}
-            {repoStats.contributors.map((contributor, itemIndex) => {
-              const isFounder = contributor.name.toLowerCase() === 'kavinthangavel';
-              return (
-              <a
-                href={contributor.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="contributor-card group relative flex flex-col items-center text-center p-6 max-w-xs mx-auto bg-gray-800/70 dark:bg-gray-900/60 border border-gray-700/70 dark:border-gray-700 rounded-2xl shadow-2xl overflow-visible transition-all duration-300 ease-out hover:shadow-purple-500/30 dark:hover:shadow-purple-400/25 hover:border-purple-500/90 dark:hover:border-purple-400/90 hover:scale-105"
-                style={`--animation-delay: ${itemIndex * 120}ms;`}
-              >
-                <div class="absolute -top-2 -right-2 w-full h-full bg-gradient-to-br from-purple-600/10 via-transparent to-indigo-600/10 opacity-0 group-hover:opacity-50 transition-opacity duration-500 ease-out z-0 rounded-2xl blur-sm group-hover:blur-none"></div>
-                
-                <div class="relative mb-5"> {/* Container for DP and Founder Cloud, reduced mb */}
-                  <img
-                    src={contributor.avatar}
-                    alt={`Avatar of ${contributor.name}`}
-                    class="floating-dp relative z-10 w-24 h-24 rounded-full border-4 border-gray-600 dark:border-gray-500/90 group-hover:border-purple-400 dark:group-hover:border-purple-300 transition-all duration-300 ease-out group-hover:scale-110 shadow-lg group-hover:shadow-purple-500/50"
-                    loading="lazy"
-                  />
-                  {isFounder && (
-                    <div class="founder-cloud absolute -top-3 -right-5 z-20 px-3 py-1 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs font-bold rounded-md shadow-lg transform rotate-6 group-hover:rotate-0 group-hover:scale-110 transition-transform duration-300 ease-out"> {/* Adjusted position & py */}
-                      Founder
-                    </div>
-                  )}
-                </div>
 
-                <div class="relative z-10">
-                  <h3 class="font-mono text-lg font-bold text-gray-100 dark:text-white group-hover:text-purple-300 dark:group-hover:text-purple-200 transition-colors duration-300 mb-1">{contributor.name}</h3> {/* Reduced text size slightly */}
-                  {!isFounder && (
-                    <p class="text-sm font-medium text-indigo-400 dark:text-indigo-300 group-hover:text-indigo-200 dark:group-hover:text-indigo-100 transition-colors duration-300">
-                      Contributor
-                    </p>
-                  )}
-                </div>
-              </a>
-            );
-          })}
-          </div>
-        ) : (
-          <p class="text-center text-gray-500 dark:text-gray-400 py-8">Could not load contributors, or maybe they are all too confused to show up!</p>
-        )}
-        
-        <div class="text-center mt-8">
-          <a href={contributorsPageUrl} target="_blank" rel="noopener noreferrer" class="longify-btn">
-            <span class="relative z-10">View All Contributors</span>
-          </a>
-        </div>
-      </div>
-    </Section>
-    
+  <main>
+    <RecentLinks />
+
     <SectionSpacer size="md" />
-    
-    <!-- Investors Section -->
-    <Section index source="investors.md" fullWidthBorder>
-      <div class="pb-12.5">
-        <h2 class="title">Our Confused Supporters</h2>
-        <p class="subtitle-small md:w-[50%]">These brave souls support our mission to make the internet less efficient. They couldn't figure out how to withdraw their funding.</p>
+
+    <Section class="py-0" padBlock={false}>
+  <ul class="inherit-content-container grid lg:grid-cols-[repeat(3,1fr)] grid-auto-rows-[200px] place-center premium-stats">
+    {newStats.map(({ title, value, unit }, idx) => (
+      <li class="flex flex-col justify-center items-center text-center border-r-1 border-r-gray-200 dark:border-r-gray-700 last:border-r-0 px-4 py-6 animate-fade-in relative modern-stats-card">
+        {/* Tiny live pill */}
+        {idx === 0 && (
+          <span class="tiny-live-pill absolute top-4 left-4 flex items-center gap-1">
+            <span class="tiny-dot"></span>
+            <span class="tiny-live-label">Live</span>
+          </span>
+        )}
+        {typeof value === 'number' ? (
+          <CountUp class="text-4 md:text-5 font-mono modern-stats-number" start={0} end={value} unit={unit} />
+        ) : (
+          <span class="text-4 md:text-5 font-mono modern-stats-number">{value}{unit}</span>
+        )}
+        <p class="text-xs mt-1 modern-stats-title">{title}</p>
+      </li>
+    ))}
+  </ul>
+</Section>
+
+    <SectionSpacer size="md" />    <Section index source="statement.md" fullWidthBorder>
+  <div class="container mx-auto px-6 sm:px-8 lg:px-12 py-16 md:py-20 text-center">
+    <h2 class="text-2xl md:text-3xl font-bold tracking-tight text-gray-900 dark:text-white mb-8 animate-fade-in">Why Choose NotShort?</h2>
+    <p class="text-base md:text-lg leading-7 text-gray-600 dark:text-gray-400 max-w-2xl mx-auto mb-12 animate-fade-in-delay">
+      Tired of short, boring links? <span class="font-bold text-gray-900 dark:text-white">NotShort</span> is the revolutionary service you never knew you needed, dedicated to making your web addresses impressively long and confusing.
+    </p>
+    <ul class="why-list grid gap-8 md:grid-cols-2 lg:grid-cols-3 max-w-4xl mx-auto animate-fade-in-delay2">      {[
+        { icon: '🔠', title: 'More Characters, More Fun', description: 'We add tons of extra letters, numbers, and dashes. Because why not?' },
+        { icon: '🐢', title: 'Guaranteed Slowdown', description: 'Sharing links takes longer. Perfect for avoiding actual work.' },
+        { icon: '🤔', title: 'Confuse Your Friends', description: 'Send links that look important (but probably aren\'t).' },
+        { icon: '🎯', title: 'Totally Pointless', description: 'It\'s the core feature! Embrace the absurdity.' },
+        { icon: '🧑‍💼', title: 'Founder-Approved', description: 'Our founder is also our only investor. Talk about commitment (or confusion)!' },
+        { icon: '🔍', title: 'Anti-SEO Technology', description: 'Our links are specifically designed to confuse search engines. It\'s like stealth mode for the web!' }
+      ].map(item => (        <li class="feature-card group transform transition-all duration-300 hover:-translate-y-2">
+          <div class="feature-icon-wrapper">
+            <span class="feature-icon">{item.icon}</span>
+          </div>
+          <h3 class="feature-title">{item.title}</h3>
+          <div class="feature-content">
+            <p class="feature-description">{item.description}</p>
+          </div>
+        </li>
+      ))}
+    </ul>
+  </div>
+</Section>
+
+    <SectionSpacer size="md" />
+
+<!-- Founder & Investor Section -->
+<Section index source="founder.md" fullWidthBorder variant="dark" >
+  <div class="container mx-auto px-6 sm:px-8 lg:px-12 py-16 md:py-20 flex flex-col items-center text-center max-w-2xl">
+    <h2 class="text-2xl md:text-3xl font-bold text-white mb-6 animate-fade-in">Our Visionary Founder & Investor</h2>
+    <p class="text-base md:text-lg text-gray-300 mb-10 animate-fade-in-delay">
+      Meet the one and only mastermind who believed in NotShort so much, he invested in himself. (No refunds.)
+    </p>
+    <div class="w-full flex justify-center animate-fade-in-delay2">
+      <div class="max-w-xs w-full">
+        <FounderCard
+          username="kavinthangavel"
+          name="Kavin Thangavel"
+          quote="I believed in NotShort so much, I funded it myself. My wallet is still recovering."
+        />
       </div>
-      <InvestorGrid />
-    </Section>
-    
-    <SectionSpacer />
-    
-    <!-- Repository Section -->
+    </div>
+  </div>
+</Section>
+
+    <SectionSpacer size="md" />    <!-- Contributors Section -->
+    <Section index source="contributors.md" fullWidthBorder>
+  <div class="container mx-auto px-6 sm:px-8 lg:px-12 py-16 md:py-20 text-center flex flex-col items-center">
+    <h2 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-6 animate-fade-in">Our Confused Contributors</h2>
+    <p class="text-base md:text-lg text-gray-600 dark:text-gray-400 mb-10 animate-fade-in-delay max-w-2xl mx-auto">
+      These brave souls write code that makes URLs longer instead of shorter. They still don't understand the assignment.</p>    <div class="contributors-avatars flex flex-wrap justify-center gap-4 md:gap-6 lg:gap-8 w-full">
+      {liveContributors.length > 0 ? (
+        liveContributors.map(contributor => (
+          <a href={contributor.html_url} target="_blank" rel="noopener noreferrer" class="contributor-avatar-wrapper" title={contributor.login}>
+            <img 
+              src={contributor.avatar_url} 
+              alt={`${contributor.login}`} 
+              class="contributor-avatar" 
+            />
+            <span class="contributor-name">{contributor.login}</span>
+          </a>
+        ))
+      ) : (
+        repoStats?.contributors.length > 0 ? (
+          repoStats.contributors.slice(0, 8).map(contributor => ( // Show more contributors, up to 8
+            <a href={contributor.url} target="_blank" rel="noopener noreferrer" class="contributor-avatar-wrapper" title={contributor.name}>
+              <img 
+                src={contributor.avatar} 
+                alt={`${contributor.name}`} 
+                class="contributor-avatar" 
+              />
+              <span class="contributor-name">{contributor.name}</span>
+            </a>
+          ))
+        ) : (
+          <p class="col-span-full text-center text-gray-500 dark:text-gray-400 text-xs">
+            Could not load contributors at this time. Please check back later or visit the <a href={contributorsPageUrl} target="_blank" rel="noopener noreferrer" class="text-gray-900 dark:text-white hover:underline">contributors page on GitHub</a>.
+          </p>
+        )
+      )}
+    </div>
+  </div>
+</Section>
+
+    <SectionSpacer size='md'/>
+ <!-- Repository Section -->
     <Section index source="Component.framework" fullWidthBorder variantInside="dark">
       <div class="grid lg:grid-cols-[4fr_1fr] place-items-center gap-5">
-        <h2 class="text-pretty title text-8 leading-8 font-bold c-gray-800 dark:c-gray-100">Want to contribute to the URL longification revolution?<br/><span class="c-gray-500 dark:c-gray-300 text-[0.9em]">Check out our unnecessarily complicated GitHub repository.</span></h2>
+        <h2 class="text-pretty title text-8 leading-8 font-bold c-gray-800 dark:c-gray-100">Want to contribute to the URL longification revolution?<br/>
+          <span class="c-gray-500 dark:c-gray-300 text-[0.9em]">Check out our unnecessarily complicated GitHub repository.</span></h2>
         <div>
-          <a href="#" class="longify-btn"> {/* Placeholder href */}
-            <span class="relative z-10">Visit Repo</span> {/* Wrap text in span */}
+          <a href={getRepoUrl()} class="longify-btn premium-btn text-base md:text-lg" target="_blank" rel="noopener noreferrer">
+            <span class="relative z-10">Visit Repo</span>
           </a>
         </div>
-      </div>
-    </Section>
-    
-    <SectionSpacer />
-    
-    <!-- Why Choose NotShort Section -->
-    <Section variant="dark" index source="statement.md" fullWidthBorder>
-      <div class="text-center py-12 md:py-16"> {/* Added padding and text-center */}
-        <h2 class="title mb-4">Why Choose NotShort?</h2>
-        <p class="subtitle-small max-w-2xl mx-auto mb-8">
-          Tired of short, boring links? So are we! NotShort is the revolutionary service you never knew you needed, dedicated to making your web addresses impressively long and confusing.
-        </p>
-        <ul class="text-left max-w-md mx-auto space-y-3 text-gray-300"> {/* Centered list, adjusted spacing */}
-          <li><strong class="font-semibold text-white">More Characters, More Fun:</strong> We add tons of extra letters, numbers, and dashes. Because why not?</li>
-          <li><strong class="font-semibold text-white">Guaranteed Slowdown:</strong> Sharing links takes longer. Perfect for avoiding actual work.</li>
-          <li><strong class="font-semibold text-white">Confuse Your Friends:</strong> Send links that look important (but probably aren't).</li>
-          <li><strong class="font-semibold text-white">Totally Pointless:</strong> It's the core feature! Embrace the absurdity.</li>
-        </ul>
       </div>
     </Section>
   </main>
 </Layout>
 
 <style>
-  .longify-btn {
-    display: inline-block;
-    position: relative;
-    padding: 0.75rem 1.5rem; /* 12px 24px */
-    font-weight: bold; /* fw-bold */
-    color: #E5E7EB; /* c-gray-100 / text-gray-200 approx */
-    background-color: #1F2937; /* bg-gray-800 */
-    text-align: center;
-    border-radius: 0.375rem; /* rounded-md */
-    overflow: hidden;
-    transition: color 0.3s ease, transform 0.2s ease;
-    transform-origin: center;
-  }
+/* Base improvements and global animations - monochrome theme */
+:root {
+  --primary-gradient: linear-gradient(135deg, #374151 0%, #111827 100%);
+  --reverse-gradient: linear-gradient(135deg, #111827 0%, #374151 100%);
+  --accent-color: #111827;
+  --accent-light: #D1D5DB;
+  --accent-lighter: #F3F4F6;
+  --success-color: #059669;
+  --success-bg: rgba(5, 150, 105, 0.12);
+  --success-border: rgba(5, 150, 105, 0.33);
+  --card-shadow: 0 6px 24px -8px rgba(0, 0, 0, 0.18);
+  --card-hover-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.28);
+  --transition-smooth: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+}
 
-  .longify-btn::before { /* Replaces btn-bg span */
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, #3B82F6 0%, #8B5CF6 100%);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1); /* Smoother transition */
-    z-index: 0;
-  }
+/* Enhanced smooth animations and transitions */
+.animate-fade-in { 
+  animation: fadeIn 0.8s cubic-bezier(0.23, 1, 0.32, 1) both; 
+  will-change: transform, opacity;
+}
+.animate-fade-in-slow { 
+  animation: fadeIn 1.5s cubic-bezier(0.23, 1, 0.32, 1) both; 
+  will-change: transform, opacity;
+}
+.animate-fade-in-delay { 
+  animation: fadeIn 0.8s 0.4s cubic-bezier(0.23, 1, 0.32, 1) both; 
+  will-change: transform, opacity;
+}
+.animate-fade-in-delay2 { 
+  animation: fadeIn 0.8s 0.8s cubic-bezier(0.23, 1, 0.32, 1) both; 
+  will-change: transform, opacity;
+}
 
-  .longify-btn:hover {
-    color: white; /* Ensure text is visible on gradient */
-    transform: scale(1.03); /* Subtle scale on hover */
+@keyframes fadeIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(24px);
   }
+  to { 
+    opacity: 1; 
+    transform: translateY(0);
+  }
+}
 
-  .longify-btn:hover::before {
-    transform: scaleX(1);
+/* Enhanced premium gradient and styling */
+.premium-gradient {
+  background: linear-gradient(135deg, #f3e8ff 0%, #e0e7ff 100%);
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.premium-gradient::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at 30% 40%, rgba(167, 139, 250, 0.08) 0%, rgba(129, 140, 248, 0.06) 40%, transparent 70%);
+  animation: bgGlow 12s ease-in-out infinite alternate;
+  z-index: -1;
+}
+
+@keyframes bgGlow {
+  0% { 
+    opacity: 0.5; 
+    transform: rotate(-2deg) scale(0.98);
+  }
+  100% { 
+    opacity: 1; 
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Enhanced button styling with smooth hover transitions */
+.longify-btn {
+  display: inline-block;
+  position: relative;
+  padding: 0.85rem 1.8rem;
+  font-weight: 700;
+  color: #E5E7EB;
+  background-color: #1F2937;
+  text-align: center;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  transition: var(--transition-smooth);
+  transform-origin: center;
+  box-shadow: 0 4px 12px rgba(31, 41, 55, 0.15);
+  letter-spacing: 0.02em;
+  border: none;
+  cursor: pointer;
+}
+
+.longify-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--primary-gradient);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+  z-index: 0;
+}
+
+.longify-btn:hover {
+  color: white;
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.25);
+}
+
+.longify-btn:hover::before {
+  transform: scaleX(1);
+}
+
+.longify-btn:active {
+  transform: translateY(1px) scale(0.99);
+}
+
+.longify-btn span {
+  position: relative;
+  z-index: 1;
+}
+
+/* Premium button with enhanced monochrome styling */
+.premium-btn {
+  font-size: 1.15rem;
+  letter-spacing: 0.03em;
+  background: #111827; /* Pure black background */
+  color: #fff;
+  border: none;
+  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.24);
+  padding: 0.9rem 2rem;
+  transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.premium-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #2563eb; /* Blue background for hover effect */
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  z-index: -1;
+}
+
+.premium-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    rgba(255, 255, 255, 0) 0%, 
+    rgba(255, 255, 255, 0.2) 50%, 
+    rgba(255, 255, 255, 0) 100%
+  );
+  z-index: 2;
+  transform: translateX(-100%);
+  transition: transform 0.01s;
+  opacity: 0;
+}
+
+.premium-btn:hover {
+  color: #fff;
+  box-shadow: 0 8px 25px rgba(37, 99, 235, 0.4);
+  transform: translateY(-3px) scale(1.02);
+}
+
+.premium-btn:hover::before {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+.premium-btn:hover::after {
+  opacity: 1;
+  animation: shimmer 1.5s infinite;
+}
+
+.premium-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 8px 0 rgba(139, 92, 246, 0.2);
+}
+
+/* Enhanced stats section */
+.premium-stats {
+  gap: 1rem;
+  padding: 1.5rem 0;
+}
+
+/* Enhanced modern stats cards */
+.modern-stats-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  border-radius: 0.5rem;
+  transition: var(--transition-smooth);
+  position: relative;
+  z-index: 1;
+  padding: 2rem;
+}
+
+.dark .modern-stats-card {
+  background: rgba(30, 41, 59, 0.7);
+}
+
+.modern-stats-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%);
+  opacity: 0;
+  transition: var(--transition-smooth);
+  z-index: -1;
+  border-radius: 0.5rem;
+}
+
+.modern-stats-card:hover::before {
+  opacity: 1;
+}
+
+.modern-stats-number {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #111827; /* Black in light mode */
+  line-height: 1.2;
+  transition: var(--transition-smooth);
+}
+
+.dark .modern-stats-number {
+  color: #F9FAFB; /* White in dark mode */
+}
+
+.modern-stats-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #4b5563;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: var(--transition-smooth);
+}
+
+.dark .modern-stats-title {
+  color: #e2e8f0;
+}
+
+/* Enhanced tiny live pill */
+.tiny-live-pill {
+  background: var(--success-bg);
+  border-radius: 9999px;
+  padding: 0.2em 0.8em 0.2em 0.5em;
+  font-size: 0.78em;
+  font-weight: 600;
+  color: var(--success-color);
+  box-shadow: 0 2px 6px 0 rgba(34, 197, 94, 0.12);
+  letter-spacing: 0.05em;
+  z-index: 3;
+  user-select: none;
+  border: 1px solid var(--success-border);
+  min-height: 1.5em;
+  min-width: 2.5em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  transition: var(--transition-smooth);
+}
+
+.tiny-live-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px 0 rgba(34, 197, 94, 0.18);
+}
+
+.tiny-dot {
+  width: 0.5em;
+  height: 0.5em;
+  border-radius: 50%;
+  background: var(--success-color);
+  box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6);
+  animation: livePulse 1.5s infinite cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-block;
+}
+
+@keyframes livePulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6);
+    opacity: 1;
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+    opacity: 0.7;
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+    opacity: 1;
+  }
+}
+
+.tiny-live-label {
+  font-weight: 700;
+  font-size: 0.85em;
+  color: var(--success-color);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Enhanced contributor avatars */
+.contributors-avatars {
+  margin-top: 2.5em;
+}
+
+.contributor-avatar-wrapper {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin: 0.5rem;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  border: 3px solid #FFFFFF;
+  transform: translateY(0);
+}
+
+.dark .contributor-avatar-wrapper {
+  border-color: #1F2937;
+}
+
+.contributor-avatar-wrapper:hover {
+  transform: translateY(-8px) scale(1.1);
+  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+  border-color: #000000;
+}
+
+.dark .contributor-avatar-wrapper:hover {
+  border-color: #FFFFFF;
+}
+
+.contributor-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.contributor-avatar-wrapper:hover .contributor-avatar {
+  transform: scale(1.05);
+}
+
+.contributor-name {
+  position: absolute;
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: #FFFFFF;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  opacity: 0;
+  transition: all 0.3s ease;
+  pointer-events: none;
+  z-index: 20;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.contributor-avatar-wrapper:hover .contributor-name {
+  opacity: 1;
+  bottom: -35px;
+  transform: translateX(-50%);
+}
+
+@media (max-width: 768px) {
+  .contributor-avatar-wrapper {
+    width: 60px;
+    height: 60px;
+    margin: 0.35rem;
   }
   
-  .longify-btn span { /* If you keep the span structure */
-    position: relative;
-    z-index: 1;
+  .contributor-name {
+    font-size: 0.65rem;
   }
+}
 
-  /* If you remove the inner spans and just put text in <a> */
-  /* .longify-btn { z-index: 1; } ensure text is above ::before */
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+/* Media queries for better responsiveness and consistent text sizing */
+@media (max-width: 768px) {
+  /* Stats section */
+  .modern-stats-number {
+    font-size: 2.5rem;
+  }
+  
+  .modern-stats-title {
+    font-size: 1rem;
+  }
+  
+  .premium-stats li {
+    margin: 0.5rem;
+    padding: 1.5rem 1rem;
+  }
+  
+  /* Section titles and text consistency */
+  h2 {
+    font-size: 1.75rem !important;
+    margin-bottom: 1rem;
+  }
+  
+  p.text-base {
+    font-size: 1rem !important;
+    line-height: 1.6;
+  }
+  /* Feature cards responsive adjustments */
+  .feature-card {
+    padding: 1.75rem 1.25rem;
+    min-height: 250px; /* Slightly shorter on mobile */
   }
   
   .contributor-card {
-    opacity: 0;
-    transform: translateY(30px) scale(0.9);
-    animation: cardFadeIn 0.7s cubic-bezier(0.165, 0.84, 0.44, 1) forwards; /* Smoother ease-out */
-    animation-delay: var(--animation-delay, 0ms);
+    min-height: 250px; /* Consistent with feature cards */
   }
+  
+  .feature-icon-wrapper {
+    width: 70px;
+    height: 70px;
+    margin-bottom: 1rem;
+  }
+  
+  .feature-icon {
+    font-size: 2rem;
+  }
+  
+  .feature-description {
+    font-size: 0.8125rem;
+  }
+}
 
-  @keyframes cardFadeIn {
-    to {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
-  }
+/* Enhanced styles for the revamped 'Why Choose NotShort?' section */
+.why-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.75rem;
+}
 
-  .floating-dp {
-    animation: floatAnimation 4s ease-in-out infinite;
-  }
+/* Feature cards with consistent styling - symmetrical black and white theme */
+.feature-card {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+  border-radius: 1rem;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(229, 231, 235, 1);
+  position: relative;
+  overflow: hidden;
+  transition: var(--transition-smooth);
+  height: 280px; /* Fixed exact height to ensure perfect symmetry */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+}
 
-  @keyframes floatAnimation {
-    0%, 100% {
-      transform: translateY(0) rotate(-1deg); /* Slight initial tilt */
-    }
-    50% {
-      transform: translateY(-8px) rotate(1deg); /* Bob up and tilt other way */
-    }
-  }
+.dark .feature-card {
+  background: rgba(17, 24, 39, 0.9);
+  border: 1px solid rgba(55, 65, 81, 1);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
 
-  .founder-cloud {
-    /* Basic cloud/tag styling, can be enhanced further */
-    /* For a speech bubble tail, more complex CSS (pseudo-elements) would be needed */
+.feature-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(229, 231, 235, 0.5) 0%, rgba(209, 213, 219, 0.5) 100%);
+  opacity: 0;
+  transition: var(--transition-smooth);
+  z-index: 0;
+  mix-blend-mode: overlay;
+}
+
+.feature-card:hover {
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12);
+  border-color: rgba(156, 163, 175, 0.7);
+}
+
+.dark .feature-card:hover {
+  border-color: rgba(75, 85, 99, 0.8);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.25);
+}
+
+.feature-card:hover::before {
+  opacity: 0.05;
+}
+
+.feature-icon-wrapper {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(243, 244, 246, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.25rem;
+  position: relative;
+  transition: var(--transition-smooth);
+  flex-shrink: 0; /* Prevent shrinking to maintain symmetry */
+}
+
+.dark .feature-icon-wrapper {
+  background: rgba(31, 41, 55, 0.8);
+}
+
+.feature-card:hover .feature-icon-wrapper {
+  transform: scale(1.1);
+  background: rgba(229, 231, 235, 1);
+}
+
+.dark .feature-card:hover .feature-icon-wrapper {
+  background: rgba(55, 65, 81, 1);
+}
+
+.feature-icon {
+  font-size: 2.5rem;
+  display: block;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  transition: var(--transition-smooth);
+}
+
+.feature-card:hover .feature-icon {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.feature-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1F2937;
+  margin-bottom: 0.75rem;
+  position: relative;
+  z-index: 1;
+  transition: var(--transition-smooth);
+  width: 100%;
+  height: 1.5em; /* Fixed height for title */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dark .feature-title {
+  color: #F9FAFB;
+}
+
+.feature-content {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.feature-description {
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: #6B7280;
+  position: relative;
+  z-index: 1;
+  width: 90%;
+  margin: 0;
+}
+
+.dark .feature-description {
+  color: #9CA3AF;
+}
+
+@media (min-width: 768px) {
+  .why-list {
+    grid-template-columns: repeat(2, 1fr);
   }
+  .feature-title {
+    font-size: 1.25rem;
+  }
+  .feature-description {
+    font-size: 0.9375rem;
+  }
+  
+  /* Maintaining symmetrical cards */
+  .feature-card, .contributor-card {
+    min-height: 300px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .why-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
 </style>

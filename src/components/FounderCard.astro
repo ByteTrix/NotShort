@@ -1,0 +1,42 @@
+---
+import { getGithubUser, type GitHubUser } from '../lib/github';
+
+interface Props {
+  username: string;
+  name: string;
+  quote: string;
+}
+
+const { username, name,  quote } = Astro.props;
+let founderData: GitHubUser | null = null;
+let avatarUrl = "/founder-avatar.png"; // Default or fallback avatar
+
+if (import.meta.env.PROD || import.meta.env.DEV) { // Ensure this runs server-side
+  founderData = await getGithubUser(username);
+  if (founderData?.avatar_url) {
+    avatarUrl = founderData.avatar_url;
+  }
+}
+---
+
+<div class="group relative flex flex-col items-center text-center p-6 md:p-8 max-w-sm mx-auto bg-gradient-to-br from-purple-700/70 via-gray-800/70 to-indigo-700/70 border border-purple-500/50 rounded-xl shadow-xl transition-all duration-300 ease-out hover:shadow-purple-400/30 hover:border-purple-400/80 hover:scale-105">
+  <div class="absolute -top-1.5 -right-1.5 w-full h-full bg-gradient-to-br from-purple-500/10 via-transparent to-indigo-500/10 opacity-0 group-hover:opacity-40 transition-opacity duration-500 ease-out z-0 rounded-xl blur-sm group-hover:blur-none"></div>
+  <div class="relative mb-4 md:mb-5">
+    <img
+      src={avatarUrl}
+      alt={`Avatar of ${name}`}
+      class="relative z-10 w-24 h-24 md:w-28 md:h-28 rounded-full border-4 border-purple-400 group-hover:border-purple-300 transition-all duration-300 ease-out group-hover:scale-110 shadow-md group-hover:shadow-purple-500/40"
+      loading="lazy"
+      width="112"
+      height="112"
+    />
+    <div class="absolute -top-2 -right-3 md:-top-2.5 md:-right-4 z-20 px-2.5 py-1 bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-[0.6rem] md:text-xs font-bold rounded-md shadow-md transform rotate-3 group-hover:rotate-0 group-hover:scale-105 transition-transform duration-300 ease-out">
+      Founder & Investor
+    </div>
+  </div>
+  <div class="relative z-10">
+    <h3 class="font-mono text-lg md:text-xl font-bold text-gray-100 group-hover:text-purple-200 transition-colors duration-300 mb-0.5 md:mb-1">{name}</h3>
+
+    {quote && <p class="text-xs text-gray-300/80 italic mt-3 md:mt-4">"{quote}"</p>}
+  </div>
+</div>

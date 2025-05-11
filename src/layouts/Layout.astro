@@ -1,7 +1,7 @@
 ---
 import Footer from '../components/Footer.astro';
 import { SITE_NAME } from '../consts';
-
+import Analytics from '@vercel/analytics/astro';
 interface Props {
 	title: string;
 }
@@ -41,7 +41,9 @@ const gaMeasurementIdExists = !!import.meta.env.PUBLIC_GA_MEASUREMENT_ID;
 	<body>
 		<nav class="border-b-1 border-b-gray-200">
 			<div class="flex items-center justify-between border-x-1 border-gray-200 pl-5 wrapper mx-auto">
-				<h1 class="font-mono text-xl">NOTSHORT</h1>
+					<a href="/" class="flex items-center py-2">
+					<h1 class="font-mono text-lg sm:text-xl text-gray-900 dark:text-gray-100">NOTSHORT</h1>
+				</a>
 				<div class="flex items-center">
 					<ul class={`grid grid-auto-flow-col`}>
 						{Object.entries(navLinks).map(([href, title]) => {
@@ -50,31 +52,52 @@ const gaMeasurementIdExists = !!import.meta.env.PUBLIC_GA_MEASUREMENT_ID;
 							</li>
 						})}
 					</ul>
-					<div id="auth-links" class="pl-2">
-						<a href="/login" id="login-link" class="text-sm px-4 py-8 tracking-0.1 hidden">Login</a>
-						<a href="/signup" id="signup-link" class="text-sm px-4 py-8 tracking-0.1 hidden">Sign Up</a>
-						<a href="/dashboard" id="dashboard-link" class="text-sm px-4 py-8 tracking-0.1 hidden">Dashboard</a>
-						<button id="logout-btn" class="text-sm px-4 py-8 tracking-0.1 hidden">Logout</button>
-					</div>
+					
 				</div>
 			</div>
 		</nav>
 		<main>
-			<slot />
+		<slot />
 		</main>
 		{/* Container for toast notifications, managed by toastService.ts */}
 		<div id="toast-notifications-container" class="fixed top-0 right-0 z-50 p-4 space-y-2"></div>
 		<Footer />
-		
-		<script>
+				<script>
 			import { supabase } from '../lib/supabaseClient';
 			
-			// Elements
+			// Desktop elements
 			const loginLink = document.getElementById('login-link');
 			const signupLink = document.getElementById('signup-link');
 			const dashboardLink = document.getElementById('dashboard-link');
 			const logoutBtn = document.getElementById('logout-btn');
-					// Check auth status and update UI
+			
+			// Mobile elements
+			const mobileLoginLink = document.getElementById('mobile-login-link');
+			const mobileSignupLink = document.getElementById('mobile-signup-link');
+			const mobileDashboardLink = document.getElementById('mobile-dashboard-link');
+			const mobileLogoutBtn = document.getElementById('mobile-logout-btn');
+			
+			// Mobile menu elements
+			const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+			const mobileMenu = document.getElementById('mobile-menu');
+			
+			// Mobile menu toggle
+			mobileMenuToggle?.addEventListener('click', () => {
+				mobileMenu?.classList.toggle('hidden');
+			});
+			
+			// Close mobile menu when clicking outside
+			document.addEventListener('click', (event) => {
+				const target = event.target as HTMLElement;
+				if (mobileMenu && 
+					!mobileMenu.classList.contains('hidden') && 
+					!mobileMenu.contains(target) && 
+					!mobileMenuToggle?.contains(target)) {
+					mobileMenu.classList.add('hidden');
+				}
+			});
+			
+			// Check auth status and update UI
 			async function updateAuthUI() {
 				// First authenticate user securely through the Supabase Auth server
 				const { data: userData } = await supabase.auth.getUser();
@@ -84,22 +107,40 @@ const gaMeasurementIdExists = !!import.meta.env.PUBLIC_GA_MEASUREMENT_ID;
 				const isLoggedIn = !!userData.user;
 				
 				if (isLoggedIn) {
-					// User is logged in
+					// User is logged in - Desktop
 					loginLink?.classList.add('hidden');
 					signupLink?.classList.add('hidden');
 					dashboardLink?.classList.remove('hidden');
 					logoutBtn?.classList.remove('hidden');
+					
+					// User is logged in - Mobile
+					mobileLoginLink?.classList.add('hidden');
+					mobileSignupLink?.classList.add('hidden');
+					mobileDashboardLink?.classList.remove('hidden');
+					mobileLogoutBtn?.classList.remove('hidden');
 				} else {
-					// User is not logged in
+					// User is not logged in - Desktop
 					loginLink?.classList.remove('hidden');
 					signupLink?.classList.remove('hidden');
 					dashboardLink?.classList.add('hidden');
 					logoutBtn?.classList.add('hidden');
+					
+					// User is not logged in - Mobile
+					mobileLoginLink?.classList.remove('hidden');
+					mobileSignupLink?.classList.remove('hidden');
+					mobileDashboardLink?.classList.add('hidden');
+					mobileLogoutBtn?.classList.add('hidden');
 				}
 			}
 			
-			// Handle logout
+			// Handle logout - Desktop
 			logoutBtn?.addEventListener('click', async () => {
+				await supabase.auth.signOut();
+				window.location.href = '/';
+			});
+			
+			// Handle logout - Mobile
+			mobileLogoutBtn?.addEventListener('click', async () => {
 				await supabase.auth.signOut();
 				window.location.href = '/';
 			});
@@ -107,6 +148,7 @@ const gaMeasurementIdExists = !!import.meta.env.PUBLIC_GA_MEASUREMENT_ID;
 			// Initial auth UI update
 			updateAuthUI();
 		</script>
+		<Analytics />
 	</body>
 </html>
 <style is:global>

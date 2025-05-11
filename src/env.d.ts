@@ -5,6 +5,7 @@ interface ImportMetaEnv {
   readonly PUBLIC_SUPABASE_ANON_KEY: string;
   readonly GA_MEASUREMENT_ID: string;
   readonly SITE: string;
+  readonly GITHUB_TOKEN?: string;
 }
 
 interface ImportMeta {

@@ -3,8 +3,10 @@ import { SITE_NAME } from '../consts';
 const now = new Date();
 const formatter = new Intl.DateTimeFormat('en-US', { year: 'numeric' });
 ---
-<footer class="py-6.25 border-t-1 border-gray-200 c-gray-600 grid place-content-center gap-[1ch] grid-cols-[repeat(3,auto)]">
-    <span class="grid-col-[span_1]">&copy; {formatter.format(now)} {SITE_NAME}</span>
-    <span class="grid-col-[span_1]">&mdash;</span>
-    <span class="grid-col-[span_1]">Made with 🖤 in 🇮🇳</span>
+<footer class="font-sans border-t border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300">
+    <div class="xl:max-w-[1120px] mx-auto flex items-center justify-center space-x-4 py-12 px-4 sm:px-6 lg:px-8 text-sm">
+        <span>&copy; {formatter.format(now)} {SITE_NAME}</span>
+        <span>&mdash;</span>
+        <span>Made with 🖤 in 🇮🇳</span>
+    </div>
 </footer>

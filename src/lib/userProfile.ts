@@ -34,9 +34,23 @@ export function getUserProfile(user: User | null): UserProfile | null {
     metadata.name || 
     metadata.preferred_username || 
     (user.email ? user.email.split('@')[0] : 'User');
+    // Get avatar URL
+  let avatarUrl = metadata.avatar_url || metadata.picture || null;
   
-  // Get avatar URL
-  const avatarUrl = metadata.avatar_url || metadata.picture || null;
+  // Proxy Google profile images to avoid CORS issues
+  if (avatarUrl && provider === 'google' && typeof avatarUrl === 'string') {
+    // Check if we're in the browser or on the server
+    const isClient = typeof window !== 'undefined';
+    
+    if (isClient) {
+      // In browser context, we need the full URL
+      const baseUrl = window.location.origin;
+      avatarUrl = `${baseUrl}/api/proxy-image?url=${encodeURIComponent(avatarUrl)}`;
+    } else {
+      // In server context, we can use a relative URL
+      avatarUrl = `/api/proxy-image?url=${encodeURIComponent(avatarUrl)}`;
+    }
+  }
   
   return {
     id: user.id,

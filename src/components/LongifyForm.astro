@@ -161,59 +161,89 @@
   });
 </script>
 
-<style>
-  .longify-submit-btn {
+<style>  .longify-submit-btn {
     /* Base styles */
-    display: inline-block; /* Or block if it takes full width */
+    display: inline-block;
     position: relative;
-    padding: 0.8rem 1.75rem; /* Slightly larger padding */
-    font-family: var(--font-mono); /* Use mono font from config */
-    font-size: 1rem; /* text-base equivalent */
-    font-weight: 600; /* semibold */
-    color: #ffffff; /* White text */
-    background-color: #1F2937; /* bg-gray-800 */
+    padding: 0.8rem 1.75rem;
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    font-weight: 600;
+    color: #ffffff;
+    background-color: #111827;
     border: none;
-    border-radius: 0.375rem; /* rounded-md */
+    border-radius: 0.375rem;
     cursor: pointer;
     overflow: hidden;
-    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
-    z-index: 1; /* Ensure button is above potential background elements */
+    transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    z-index: 1;
     text-align: center;
-    min-width: 150px; /* Ensure minimum width */
+    min-width: 150px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
 
   .longify-submit-btn .button-text {
     position: relative;
-    z-index: 2; /* Keep text above the gradient */
+    z-index: 3;
   }
-
+  
   .longify-submit-btn::before {
-    /* Gradient background */
     content: '';
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(95deg, #4f46e5 0%, #a855f7 50%, #ec4899 100%); /* New gradient */
+    background: #2563eb; /* Blue background for hover effect */
     transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.45s cubic-bezier(0.77, 0, 0.175, 1); /* Smoother, slightly slower wipe */
-    z-index: 1; /* Behind the text */
+    transform-origin: right;
+    transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+    z-index: 1;
+  }
+
+  .longify-submit-btn::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+      rgba(255, 255, 255, 0) 0%, 
+      rgba(255, 255, 255, 0.2) 50%, 
+      rgba(255, 255, 255, 0) 100%
+    );
+    z-index: 2;
+    transform: translateX(-100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
   }
 
   .longify-submit-btn:hover {
-    transform: scale(1.01); /* Keep subtle scale, remove lift */
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(37, 99, 235, 0.4);
   }
 
   .longify-submit-btn:hover::before {
-    transform: scaleX(1); /* Reveal gradient on hover */
+    transform: scaleX(1);
+    transform-origin: left;
   }
 
+  .longify-submit-btn:hover::after {
+    animation: shimmer 1.5s infinite;
+    opacity: 1;
+  }
+    @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
   .longify-submit-btn:active {
-    transform: scale(1.00); /* Remove translateY, keep press down scale */
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(1px) scale(0.99);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
   }
 
   /* Remove old styles if they exist */
