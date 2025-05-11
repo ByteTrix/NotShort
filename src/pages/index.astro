@@ -6,7 +6,7 @@ import SectionSpacer from '../components/SectionSpacer.astro';
 import InvestorGrid from '../components/InvestorGrid.astro';
 import LongifyForm from '../components/LongifyForm.astro';
 import RecentLinks from '../components/RecentLinks.astro';
-import { getRepoStats } from '../lib/github'; // Updated to getRepoStats for stars
+import { getRepoStats, getRepoUrl } from '../lib/github'; // Import getRepoUrl
 import { createSupabaseServerClient } from '../lib/supabaseClient';
 import CountUp from "../components/CountUp.astro"; // For animated numbers
 
@@ -14,7 +14,16 @@ const supabase = createSupabaseServerClient(Astro.cookies);
 
 let generatedUrlsCount: number | string = 'N/A';
 let activeUsersCount: number | string = 'N/A';
-let githubStarsCount: number | string = 'N/A';
+// let githubStarsCount: number | string = 'N/A'; // Will get this from repoStats
+import type { RepoStats } from '../lib/github'; // Import the interface
+let repoStats: RepoStats | null = null; // Store the full stats object
+
+// Simple in-memory cache for user count
+const USER_COUNT_CACHE_DURATION_MS = 60 * 60 * 1000; // 60 minutes
+let userCountCache = {
+  count: null as number | null,
+  timestamp: 0,
+};
 
 try {
   const { count: urlsCount, error: urlsError } = await supabase
@@ -31,47 +40,69 @@ try {
 }
 
 try {
-  // Assuming 'users' table or a view that gives active users.
-  // If you have a specific way to define "active users" (e.g., last_active_at),
-  // this query would need to be adjusted.
-  const { count: usersCount, error: usersError } = await supabase
-    .from('users') // Assuming 'users' table
-    .select('*', { count: 'exact', head: true });
-
-  if (usersError) {
-    console.error('Error fetching active users count:', usersError.message);
+  const now = Date.now();
+  if (userCountCache.timestamp > 0 && (now - userCountCache.timestamp < USER_COUNT_CACHE_DURATION_MS) && userCountCache.count !== null) {
+    console.log('Using cached user count:', userCountCache.count);
+    activeUsersCount = userCountCache.count;
   } else {
-    activeUsersCount = usersCount ?? 0;
+    console.log('Fetching fresh user count via get-user-count Edge Function...');
+    // Ensure get-user-count function is deployed and working
+    const { data: userCountData, error: userCountError } = await supabase.functions.invoke('get-user-count');
+    console.log('Raw response from get-user-count:', { userCountData, userCountError });
+
+    if (userCountError) {
+      console.error('Error invoking get-user-count function:', userCountError.message, userCountError);
+      activeUsersCount = userCountCache.count !== null ? userCountCache.count : 'Error'; // Fallback to stale cache or Error
+      if (userCountCache.count !== null) console.warn('Falling back to stale user count due to fetch error.');
+    } else if (userCountData && (typeof userCountData.count === 'number' || userCountData.count === null)) {
+      const newCount = userCountData.count === null ? 0 : userCountData.count; // Treat null as 0
+      activeUsersCount = newCount;
+      userCountCache = { count: newCount, timestamp: now }; // Update cache
+      console.log('User count updated in cache:', newCount);
+    } else {
+      console.error('Invalid data structure received from get-user-count function:', userCountData);
+      activeUsersCount = userCountCache.count !== null ? userCountCache.count : 'N/A'; // Fallback to stale cache or N/A
+    }
   }
 } catch (e: any) {
-  console.error('Supabase query error (Users):', e.message);
+  console.error('Exception while calling get-user-count Edge Function:', e.message);
+  activeUsersCount = userCountCache.count !== null ? userCountCache.count : 'Error'; // Fallback to stale cache or Error
+  if (userCountCache.count !== null) console.warn('Falling back to stale user count due to exception.');
 }
 
 try {
-  const repoStats = await getRepoStats(); // Fetches stars, forks, etc.
-  githubStarsCount = repoStats.stars;
+  repoStats = await getRepoStats(); // Fetches stars, forks, contributors, etc.
 } catch (e: any) {
-  console.error('Error fetching GitHub stars:', e.message);
+  console.error('Error fetching GitHub stats:', e.message);
+  // Fallback or ensure repoStats remains null so the page can handle it
+  repoStats = { // Provide a fallback structure matching RepoStats
+    stars: 0,
+    forks: 0,
+    contributors: [],
+    lastUpdate: new Date().toISOString()
+  };
 }
 
 const newStats = [
   { title: "URLs Generated", value: generatedUrlsCount, unit: "", by: "" },
   { title: "Active Users", value: activeUsersCount, unit: "", by: "" },
-  { title: "GitHub Stars", value: githubStarsCount, unit: "✨", by: "" },
+  { title: "GitHub Stars", value: repoStats?.stars ?? 'N/A', unit: "✨", by: "" },
 ];
+
+const contributorsPageUrl = `${getRepoUrl()}/graphs/contributors`;
 ---
 
 <Layout title="NotShort – A Parody Link Longner">
   <Header gridBg>
     <div class="text-center py-12 md:py-35"> {/* Added padding for better spacing */}
       <p class="font-mono text-sm text-gray-600 dark:text-gray-400 mb-2"> {/* Adjusted tagline styling */}
-        The only site that makes your links longer, not shorter!
+        The best site that makes your links longer, not shorter!
       </p>
       <h1 class="text-6xl md:text-7xl font-serif font-bold mb-6 text-gray-900 dark:text-white"> {/* Larger, serif font for title */}
         NotShort
       </h1>
       <p class="text-lg text-gray-700 dark:text-gray-300 max-w-xl mx-auto mb-8"> {/* Slightly larger subtitle */}
-        Welcome to the world's best parody of a link shortener. We take your short links and make them as long and ridiculous as possible. Why be short when you can be notshort? (🥳 Get it ? "NotShort")
+        Welcome to the world's most well developed url <span class="line-through">shortener</span> <span class="text-accent font-medium">lengthener</span>. We take your short links and make them as long and ridiculous as possible. Why be short when you can be not short ? (Get it ? "NotShort")
       </p>
       <div class="mt-10 max-w-lg mx-auto"> {/* Added max-width to form container */}
         <LongifyForm />
@@ -117,23 +148,54 @@ const newStats = [
       <div class="lg:w-[70%] md:w-[80%] mx-auto">
         <h2 class="title mb-8">Our Confused Contributors</h2>
         <p class="subtitle-small mb-8">These brave souls write code that makes URLs longer instead of shorter. They still don't understand the assignment.</p>
-<!--         
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {gitStats.contributors.map((contributor) => (
-            <a href={contributor.url} target="_blank" rel="noopener noreferrer" 
-               class="contributor-card flex items-center p-4 border-1 border-gray-700 bg-gray-800 hover:bg-gray-700 transition-colors duration-300 transform hover:scale-[1.02]">
-              <img src={contributor.avatar} alt={contributor.name} class="w-12 h-12 rounded-full mr-4" />
-              <div>
-                <h3 class="font-mono text-gray-100">{contributor.name}</h3>
-                <p class="text-xs text-gray-400">GitHub Contributor</p>
-              </div>
-            </a>
-          ))} 
-        </div> -->
+        
+        {repoStats && repoStats.contributors && repoStats.contributors.length > 0 ? (
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-10 mb-16"> {/* Adjusted grid and gaps */}
+            {repoStats.contributors.map((contributor, itemIndex) => {
+              const isFounder = contributor.name.toLowerCase() === 'kavinthangavel';
+              return (
+              <a
+                href={contributor.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="contributor-card group relative flex flex-col items-center text-center p-6 max-w-xs mx-auto bg-gray-800/70 dark:bg-gray-900/60 border border-gray-700/70 dark:border-gray-700 rounded-2xl shadow-2xl overflow-visible transition-all duration-300 ease-out hover:shadow-purple-500/30 dark:hover:shadow-purple-400/25 hover:border-purple-500/90 dark:hover:border-purple-400/90 hover:scale-105"
+                style={`--animation-delay: ${itemIndex * 120}ms;`}
+              >
+                <div class="absolute -top-2 -right-2 w-full h-full bg-gradient-to-br from-purple-600/10 via-transparent to-indigo-600/10 opacity-0 group-hover:opacity-50 transition-opacity duration-500 ease-out z-0 rounded-2xl blur-sm group-hover:blur-none"></div>
+                
+                <div class="relative mb-5"> {/* Container for DP and Founder Cloud, reduced mb */}
+                  <img
+                    src={contributor.avatar}
+                    alt={`Avatar of ${contributor.name}`}
+                    class="floating-dp relative z-10 w-24 h-24 rounded-full border-4 border-gray-600 dark:border-gray-500/90 group-hover:border-purple-400 dark:group-hover:border-purple-300 transition-all duration-300 ease-out group-hover:scale-110 shadow-lg group-hover:shadow-purple-500/50"
+                    loading="lazy"
+                  />
+                  {isFounder && (
+                    <div class="founder-cloud absolute -top-3 -right-5 z-20 px-3 py-1 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs font-bold rounded-md shadow-lg transform rotate-6 group-hover:rotate-0 group-hover:scale-110 transition-transform duration-300 ease-out"> {/* Adjusted position & py */}
+                      Founder
+                    </div>
+                  )}
+                </div>
+
+                <div class="relative z-10">
+                  <h3 class="font-mono text-lg font-bold text-gray-100 dark:text-white group-hover:text-purple-300 dark:group-hover:text-purple-200 transition-colors duration-300 mb-1">{contributor.name}</h3> {/* Reduced text size slightly */}
+                  {!isFounder && (
+                    <p class="text-sm font-medium text-indigo-400 dark:text-indigo-300 group-hover:text-indigo-200 dark:group-hover:text-indigo-100 transition-colors duration-300">
+                      Contributor
+                    </p>
+                  )}
+                </div>
+              </a>
+            );
+          })}
+          </div>
+        ) : (
+          <p class="text-center text-gray-500 dark:text-gray-400 py-8">Could not load contributors, or maybe they are all too confused to show up!</p>
+        )}
         
         <div class="text-center mt-8">
-          <a href="#" class="longify-btn"> {/* Placeholder href */}
-            <span class="relative z-10">View All Contributors</span> {/* Wrap text in span */}
+          <a href={contributorsPageUrl} target="_blank" rel="noopener noreferrer" class="longify-btn">
+            <span class="relative z-10">View All Contributors</span>
           </a>
         </div>
       </div>
@@ -236,13 +298,34 @@ const newStats = [
   }
   
   .contributor-card {
-    animation: fadeIn 0.5s ease forwards;
     opacity: 0;
+    transform: translateY(30px) scale(0.9);
+    animation: cardFadeIn 0.7s cubic-bezier(0.165, 0.84, 0.44, 1) forwards; /* Smoother ease-out */
+    animation-delay: var(--animation-delay, 0ms);
   }
-  
-  .contributor-card:nth-child(1) { animation-delay: 0.1s; }
-  .contributor-card:nth-child(2) { animation-delay: 0.2s; }
-  .contributor-card:nth-child(3) { animation-delay: 0.3s; }
-  .contributor-card:nth-child(4) { animation-delay: 0.4s; }
-  .contributor-card:nth-child(5) { animation-delay: 0.5s; }
+
+  @keyframes cardFadeIn {
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .floating-dp {
+    animation: floatAnimation 4s ease-in-out infinite;
+  }
+
+  @keyframes floatAnimation {
+    0%, 100% {
+      transform: translateY(0) rotate(-1deg); /* Slight initial tilt */
+    }
+    50% {
+      transform: translateY(-8px) rotate(1deg); /* Bob up and tilt other way */
+    }
+  }
+
+  .founder-cloud {
+    /* Basic cloud/tag styling, can be enhanced further */
+    /* For a speech bubble tail, more complex CSS (pseudo-elements) would be needed */
+  }
 </style>

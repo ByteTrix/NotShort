@@ -2,25 +2,20 @@
 import Layout from './Layout.astro';
 import { supabase } from '../lib/supabaseClient';
 import { getUserProfile } from '../lib/userProfile';
+import type { User } from '@supabase/supabase-js'; // For type safety with Astro.locals.user
 
-// Get user data - but don't attempt to redirect from here
-// Redirection should happen in the page components themselves
-// First authenticate user through the Supabase Auth server
-const { data: userData } = await supabase.auth.getUser();
-const authenticatedUser = userData.user;
+// User data is expected to be populated in Astro.locals.user by the authMiddleware
+// for pages using this layout.
+const userFromLocals = Astro.locals.user as User | undefined; // Cast to User or undefined
 
-// Then get the session data for any session-specific information
-const { data } = await supabase.auth.getSession();
-const session = data.session || null;
-
-// Use the authenticated user from getUser() for security
-const user = authenticatedUser || null;
+// If Astro.locals.user is not available, user will be null.
+// The UI (avatar, display name) should gracefully handle a null user/userProfile.
+const user = userFromLocals || null;
 
 // Use our utility to get structured user profile information
 const userProfile = getUserProfile(user);
 const avatarUrl = userProfile?.avatarUrl;
-const userDisplayName = userProfile?.displayName || 'User';
-const userEmail = user?.email || 'User';
+const userDisplayName = userProfile?.displayName || 'User'; // getUserProfile handles good defaults
 
 // Get page title from props or default
 const { title = 'Dashboard - notshort' } = Astro.props;

@@ -1,14 +1,15 @@
-import type { Session } from '@supabase/supabase-js';
 import type { AstroGlobal } from 'astro';
 import { createSupabaseServerClient } from './supabaseClient';
+import type { User } from '@supabase/supabase-js';
 
 /**
  * Authentication middleware for protected pages
  * This should be used at the top of your Astro component frontmatter
  */
 export async function requireAuth(Astro: AstroGlobal) {
-  console.log(`[authMiddleware] requireAuth function CALLED for path: ${Astro.url.pathname}`);
-  const supabase = createSupabaseServerClient(Astro.cookies);  console.log(`[authMiddleware] Supabase client CREATED for path: ${Astro.url.pathname}. Authenticating user...`);
+  // console.log(`[authMiddleware] requireAuth function CALLED for path: ${Astro.url.pathname}`);
+  const supabase = createSupabaseServerClient(Astro.cookies);  
+  // console.log(`[authMiddleware] Supabase client CREATED for path: ${Astro.url.pathname}. Authenticating user...`);
   
   // Verify user authentication with getUser() which validates with the auth server
   // This is the more secure approach as recommended by Supabase
@@ -46,18 +47,11 @@ export async function requireAuth(Astro: AstroGlobal) {
     return Astro.redirect('/login?redirect=' + encodeURIComponent(Astro.url.pathname));
   }
 
-  // Create a "clean" user object from the authenticated userData,
-  // rather than passing the possibly insecure session.user
-  const authenticatedUser = {
-    id: userData.user.id,
-    email: userData.user.email,
-    app_metadata: userData.user.app_metadata,
-    user_metadata: userData.user.user_metadata,
-    // Add any other fields you need, but source them from userData.user
-    aud: userData.user.aud, // Add aud property
-    created_at: userData.user.created_at, // Add created_at property
-  };
+  // Make the user object available in Astro.locals for other parts of the application (e.g., layouts)
+  // userData.user is of type User, which matches Astro.locals.user type User | null
+  Astro.locals.user = userData.user;
   
-  console.log(`[authMiddleware] Authentication successful for ${Astro.url.pathname}. User ID:`, userData.user.id);
-  return { session, user: authenticatedUser };
+  // console.log(`[authMiddleware] Authentication successful for ${Astro.url.pathname}. User ID:`, userData.user.id);
+  // Return the session and the user object (which is userData.user)
+  return { session, user: userData.user };
 }

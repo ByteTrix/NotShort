@@ -47,6 +47,8 @@
 </div>
 
 <script>
+  import { showToast } from '../lib/toastService'; // Corrected import path
+
   document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('url-form');
     const resultContainer = document.getElementById('result-container');
@@ -61,7 +63,8 @@
       const urlInput = document.getElementById('original-url') as HTMLInputElement;
       const url = urlInput.value.trim();
       
-      if (!url) return;      try {
+      if (!url) return;      
+      try {
         // Call the longify API endpoint
         const response = await fetch('/api/longify', {
           method: 'POST',
@@ -72,14 +75,18 @@
         });
         
         if (!response.ok) {
-          const errorData = await response.json();
+          const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response' })); // Gracefully handle non-JSON error responses
           // If user is not authenticated, redirect to login page
-          if (response.status === 401) {
-            const loginUrl = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
-            window.location.href = loginUrl;
+          if (response.status === 500) {
+            showToast({ message: 'Hey You..Yes You, Redirecting to login...', type: 'warning' });
+            setTimeout(() => {
+              const loginUrl = `/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+              window.location.href = loginUrl;
+            }, 1500); // Delay redirect slightly to allow toast to be seen
             return;
           }
-          throw new Error(errorData.error || 'Failed to create long URL');
+          // Throw an object with status and message for other errors
+          throw { status: response.status, message: errorData.error || `HTTP error! status: ${response.status}` };
         }
         
         const data = await response.json();
@@ -111,9 +118,23 @@
           // Scroll to the result container
           resultContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-      } catch (error: any) { // Type error as 'any' to access message property
+      } catch (error: any) {
         console.error('Error longifying URL:', error);
-        alert(`Error: ${error.message || 'Failed to create long URL'}`);
+        const isAuthError = error &&
+                            (error.status === 401 ||
+                             (error.status === 500 && error.message && error.message.toLowerCase().includes('authentication error')));
+
+        if (isAuthError) {
+          showToast({ message: error.message || 'Authentication required. Redirecting to login...', type: 'error' });
+          setTimeout(() => {
+            const loginUrl = `/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+            window.location.href = loginUrl;
+          }, 2000);
+        } else if (error && error.status === 501) {
+          showToast({ message: "Our hamsters are on a coffee break! (Error 500). Please try again shortly.", type: 'warning' });
+        } else {
+          showToast({ message: error.message || 'Failed to create long URL. Please try again.', type: 'error' });
+        }
       }
     });
     
