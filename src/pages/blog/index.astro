@@ -6,15 +6,15 @@ import { getCollection, getEntry } from "astro:content";
 import FormattedDate from "../../components/FormattedDate.astro";
 import SectionSpacer from "../../components/SectionSpacer.astro";
 
-const title = "Your companies blog"
-const subtitle = "This is where your company can post things that will then be read by users or potential customers!"
+const title = "blog ?"
+const subtitle = "I know that you are probably wondering about whytf a URL shor.... Longener need a blog section "
 
 const posts = await getCollection('posts');
 ---
 <Layout title={title}>
     <Header gridBg>
         <h1 class="text-12 leading-[1.2] lg:text-20">{title}</h1>
-        <h2 class="text-8 leading-[1.2] lg:text-16 c-gray-600">{subtitle}</h2>
+        <h2 class="text-8 leading-[1.2] lg:text-16 c-gray-600 dark:c-gray-300">{subtitle}</h2>
     </Header>
     <main>
         <Section fullWidthBorder>            <ul class="ignore-content-container">

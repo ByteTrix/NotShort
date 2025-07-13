@@ -2,6 +2,7 @@
 import Footer from '../components/Footer.astro';
 import { SITE_NAME } from '../consts';
 import Analytics from '@vercel/analytics/astro';
+// Removed unused getUserProfile import
 interface Props {
 	title: string;
 }
@@ -48,45 +49,79 @@ const gaMeasurementIdExists = !!import.meta.env.PUBLIC_GA_MEASUREMENT_ID;
 		{/* End Google Analytics 4 */}
 	</head>
 	<body>
-		<nav class="border-b-1 border-b-gray-200">
-			<div class="flex items-center justify-between border-x-1 border-gray-200 pl-5 wrapper mx-auto">
+		<nav class="border-b-1 border-b-gray-200 dark:border-b-gray-700 bg-white dark:bg-gray-800">
+			<div class="flex items-center justify-between border-x-1 border-gray-200 dark:border-x-gray-700 pl-5 wrapper mx-auto">
 				<a href="/" class="flex items-center py-2">
 					<h1 class="font-mono text-lg sm:text-xl text-gray-900 dark:text-gray-100">NOTSHORT</h1>
 				</a>
 				<div class="flex items-center">					<ul class="flex space-x-4">
 						{Object.entries(navLinks).map(([href, title]) => {
 							return <li>
-								<a href={href} class="text-sm px-3 py-5 tracking-0.1 block">{title}</a>
+								<a href={href} class="text-sm px-3 py-5 tracking-0.1 block text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100">{title}</a>
 							</li>
 						})}
 						<li id="dashboard-nav-item" class="hidden">
-							<a href="/dashboard" class="text-sm px-3 py-5 tracking-0.1 block">Dashboard</a>
+							<a href="/dashboard" class="text-sm px-3 py-5 tracking-0.1 block text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100">Dashboard</a>
 						</li>
 					</ul>
 					
-					<!-- Authentication links -->
-					<div id="auth-links" class="ml-4 flex items-center border-l border-gray-200 dark:border-gray-700 pl-4">
-						<a href="/login" id="login-link" class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hidden px-3 py-5">Sign in</a>
-						<a href="/signup" id="signup-link" class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hidden px-3 py-5">Sign up</a>
-						<button id="logout-btn" class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 text-left hidden px-3 py-5">Logout</button>
+					<!-- Authentication links / User Menu -->
+					<div id="auth-section" class="relative ml-4 flex items-center border-l border-gray-200 dark:border-gray-700 pl-4 pr-4"> {/* Added pr-4 */}
+						{/* Links shown when logged out */}
+						<div id="logged-out-links">
+							<a href="/login" id="login-link" class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hidden px-3 py-2">Sign in</a>
+							<a href="/signup" id="signup-link" class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hidden px-3 py-2 ml-2">Sign up</a>
+						</div>
+
+						{/* User Menu shown when logged in */}
+						<div id="user-menu-container" class="hidden">
+							<button id="user-menu-button" type="button" class="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:focus:ring-offset-gray-800" aria-expanded="false" aria-haspopup="true">
+								<span class="sr-only">Open user menu</span>
+								<img id="user-avatar-img" class="h-8 w-8 rounded-full object-cover" src="" alt="User Avatar" />
+								{/* <span id="user-display-name" class="ml-2 hidden sm:inline text-sm font-medium text-gray-700 dark:text-gray-300">User</span> Removed name from button */}
+							</button>
+							{/* Dropdown menu - Increased z-index */}
+							<div id="user-menu-dropdown" class="absolute right-0 z-20 mt-2 w-56 origin-top-right rounded-md bg-white dark:bg-gray-800 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none hidden" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
+								<div class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300">
+									Hi, <span id="dropdown-user-display-name" class="font-medium">User</span>
+								</div>
+								<div class="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+								<a href="/dashboard" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Dashboard</a>
+								<a href="/dashboard/profile" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Profile Settings</a>
+								<div class="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+								<button id="user-menu-logout-btn" class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Logout</button>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
 					<!-- Mobile menu, hidden by default -->
-			<div id="mobile-menu" class="md:hidden hidden border-t border-gray-200 dark:border-gray-700">
+			<div id="mobile-menu" class="md:hidden hidden border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
 				<div class="px-2 pt-2 pb-3 space-y-1">
 					{Object.entries(navLinks).map(([href, title]) => (
 						<a href={href} class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white">
 							{title}
 						</a>
 					))}
-					<div id="mobile-dashboard-nav-item" class="hidden">
-						<a href="/dashboard" class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Dashboard</a>
-					</div>
-					<div class="border-t border-gray-200 dark:border-gray-700 mt-2 pt-2">
-						<a href="/login" id="mobile-login-link" class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hidden">Sign in</a>
-						<a href="/signup" id="mobile-signup-link" class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hidden">Sign up</a>
-						<button id="mobile-logout-btn" class="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hidden">Logout</button>
+					{/* Mobile Auth Section */}
+					<div id="mobile-auth-section" class="border-t border-gray-200 dark:border-gray-700 mt-2 pt-2">
+						{/* Mobile Logged Out Links */}
+						<div id="mobile-logged-out-links">
+							<a href="/login" id="mobile-login-link" class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hidden">Sign in</a>
+							<a href="/signup" id="mobile-signup-link" class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hidden">Sign up</a>
+						</div>
+						{/* Mobile Logged In Menu Items */}
+						<div id="mobile-user-menu-items" class="hidden">
+							<div class="flex items-center px-3 py-2 border-b border-gray-100 dark:border-gray-700 mb-1">
+								<img id="mobile-user-avatar-img" class="h-8 w-8 rounded-full object-cover mr-2" src="" alt="User Avatar" />
+								<div class="text-base text-gray-700 dark:text-gray-200">
+									Hi, <span id="mobile-dropdown-user-display-name" class="font-medium">User</span>
+								</div>
+							</div>
+							<a href="/dashboard" class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Dashboard</a>
+							<a href="/dashboard/profile" class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Profile Settings</a>
+							<button id="mobile-logout-btn" class="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 mt-1 pt-2 border-t border-gray-100 dark:border-gray-700">Logout</button>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -100,16 +135,29 @@ const gaMeasurementIdExists = !!import.meta.env.PUBLIC_GA_MEASUREMENT_ID;
 		<script>
 			import { supabase } from '../lib/supabaseClient';
 					// Desktop elements
+			// --- Desktop Elements ---
+			const loggedOutLinks = document.getElementById('logged-out-links');
 			const loginLink = document.getElementById('login-link');
 			const signupLink = document.getElementById('signup-link');
-			const logoutBtn = document.getElementById('logout-btn');
-			
-			// Mobile elements
+			const userMenuContainer = document.getElementById('user-menu-container');
+			const userMenuButton = document.getElementById('user-menu-button');
+			const userAvatarImg = document.getElementById('user-avatar-img') as HTMLImageElement | null;
+			// const userDisplayNameSpan = document.getElementById('user-display-name'); // Removed
+			const userMenuDropdown = document.getElementById('user-menu-dropdown');
+			const dropdownUserDisplayNameSpan = document.getElementById('dropdown-user-display-name');
+			const userMenuLogoutBtn = document.getElementById('user-menu-logout-btn');
+
+			// --- Mobile Elements ---
+			const mobileLoggedOutLinks = document.getElementById('mobile-logged-out-links');
 			const mobileLoginLink = document.getElementById('mobile-login-link');
 			const mobileSignupLink = document.getElementById('mobile-signup-link');
+			const mobileUserMenuItems = document.getElementById('mobile-user-menu-items');
+			const mobileUserAvatarImg = document.getElementById('mobile-user-avatar-img') as HTMLImageElement | null;
+			// const mobileUserDisplayNameSpan = document.getElementById('mobile-user-display-name'); // Removed
+			const mobileDropdownUserDisplayNameSpan = document.getElementById('mobile-dropdown-user-display-name');
 			const mobileLogoutBtn = document.getElementById('mobile-logout-btn');
-			
-			// Mobile menu elements
+
+			// --- Mobile Menu Toggle Elements ---
 			const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
 			const mobileMenu = document.getElementById('mobile-menu');
 			const navbarContent = document.getElementById('navbar-content');
@@ -132,56 +180,148 @@ const gaMeasurementIdExists = !!import.meta.env.PUBLIC_GA_MEASUREMENT_ID;
 			});
 					// Check auth status and update UI
 			async function updateAuthUI() {
-				// First authenticate user securely through the Supabase Auth server
-				const { data: userData } = await supabase.auth.getUser();
-				// Then get the session if needed
-				await supabase.auth.getSession(); // We don't need the session data, just the user data
-				// Use authenticated user status as the source of truth
-				const isLoggedIn = !!userData.user;
-				
-				// Get dashboard nav items
-				const dashboardNavItem = document.getElementById('dashboard-nav-item');
-				const mobileDashboardNavItem = document.getElementById('mobile-dashboard-nav-item');
-				
+				const { data: { user } } = await supabase.auth.getUser();
+				const isLoggedIn = !!user;
+
 				if (isLoggedIn) {
-					// User is logged in - Desktop
-					loginLink?.classList.add('hidden');
-					signupLink?.classList.add('hidden');
-					logoutBtn?.classList.remove('hidden');
-					dashboardNavItem?.classList.remove('hidden');
-					
-					// User is logged in - Mobile
-					mobileLoginLink?.classList.add('hidden');
-					mobileSignupLink?.classList.add('hidden');
-					mobileLogoutBtn?.classList.remove('hidden');
-					mobileDashboardNavItem?.classList.remove('hidden');
+					// Replicate getUserProfile logic here
+					const metadata = user.user_metadata;
+					let avatarUrl = metadata?.avatar_url; // Get avatar from metadata
+					// Determine display name: metadata.full_name -> metadata.name -> user.email -> 'User'
+					const displayName = metadata?.full_name || metadata?.name || user.email || 'User';
+
+					// --- Desktop UI ---
+					loggedOutLinks?.classList.add('hidden');
+					userMenuContainer?.classList.remove('hidden');
+
+					// if (userDisplayNameSpan) userDisplayNameSpan.textContent = displayName; // Removed
+					if (dropdownUserDisplayNameSpan) dropdownUserDisplayNameSpan.textContent = displayName;
+
+
+					if (userAvatarImg) {
+						if (avatarUrl) {
+							userAvatarImg.src = `/api/proxy-image?url=${encodeURIComponent(avatarUrl)}`;
+							userAvatarImg.alt = `${displayName}'s avatar`;
+							userAvatarImg.classList.remove('hidden'); // Ensure img is visible
+							// Remove potential fallback div if it exists
+							const fallback = userAvatarImg.nextElementSibling;
+							if (fallback && fallback.classList.contains('avatar-fallback')) {
+								fallback.remove();
+							}
+						} else {
+							// Show fallback initial if no avatar URL
+							userAvatarImg.classList.add('hidden'); // Hide img tag
+							// Create or update fallback div
+							let fallback = userAvatarImg.nextElementSibling;
+							if (!fallback || !fallback.classList.contains('avatar-fallback')) {
+								fallback = document.createElement('div');
+								fallback.className = 'avatar-fallback h-8 w-8 rounded-full bg-gray-600 dark:bg-gray-700 text-white flex items-center justify-center font-mono';
+								userAvatarImg.parentNode?.insertBefore(fallback, userAvatarImg.nextSibling);
+							}
+							(fallback as HTMLElement).textContent = displayName.charAt(0).toUpperCase();
+						}
+					}
+
+					// --- Mobile UI ---
+					mobileLoggedOutLinks?.classList.add('hidden');
+					mobileUserMenuItems?.classList.remove('hidden');
+
+					// if (mobileUserDisplayNameSpan) mobileUserDisplayNameSpan.textContent = displayName; // Removed
+					if (mobileDropdownUserDisplayNameSpan) mobileDropdownUserDisplayNameSpan.textContent = displayName;
+
+					if (mobileUserAvatarImg) {
+						if (avatarUrl) {
+							mobileUserAvatarImg.src = `/api/proxy-image?url=${encodeURIComponent(avatarUrl)}`;
+							mobileUserAvatarImg.alt = `${displayName}'s avatar`;
+							mobileUserAvatarImg.classList.remove('hidden');
+							const mobileFallback = mobileUserAvatarImg.nextElementSibling;
+							if (mobileFallback && mobileFallback.classList.contains('avatar-fallback')) {
+								mobileFallback.remove();
+							}
+						} else {
+							mobileUserAvatarImg.classList.add('hidden');
+							let mobileFallback = mobileUserAvatarImg.nextElementSibling;
+							if (!mobileFallback || !mobileFallback.classList.contains('avatar-fallback')) {
+								mobileFallback = document.createElement('div');
+								mobileFallback.className = 'avatar-fallback h-8 w-8 rounded-full bg-gray-600 dark:bg-gray-700 text-white flex items-center justify-center font-mono';
+								mobileUserAvatarImg.parentNode?.insertBefore(mobileFallback, mobileUserAvatarImg.nextSibling);
+							}
+							(mobileFallback as HTMLElement).textContent = displayName.charAt(0).toUpperCase();
+						}
+					}
+
 				} else {
-					// User is not logged in - Desktop
-					loginLink?.classList.remove('hidden');
+					// --- Desktop UI ---
+					loggedOutLinks?.classList.remove('hidden');
+					loginLink?.classList.remove('hidden'); // Ensure these are visible
 					signupLink?.classList.remove('hidden');
-					logoutBtn?.classList.add('hidden');
-					dashboardNavItem?.classList.add('hidden');
-					
-					// User is not logged in - Mobile
+					userMenuContainer?.classList.add('hidden');
+					userMenuDropdown?.classList.add('hidden'); // Hide dropdown if logged out
+
+					// --- Mobile UI ---
+					mobileLoggedOutLinks?.classList.remove('hidden');
 					mobileLoginLink?.classList.remove('hidden');
 					mobileSignupLink?.classList.remove('hidden');
-					mobileLogoutBtn?.classList.add('hidden');
-					mobileDashboardNavItem?.classList.add('hidden');
+					mobileUserMenuItems?.classList.add('hidden');
 				}
 			}
 			
-			// Handle logout - Desktop
-			logoutBtn?.addEventListener('click', async () => {
-				await supabase.auth.signOut();
-				window.location.href = '/';
+			// --- Event Listeners ---
+
+			// Desktop User Menu Toggle
+			userMenuButton?.addEventListener('click', () => {
+				userMenuDropdown?.classList.toggle('hidden');
 			});
-			
-			// Handle logout - Mobile
+
+			// Desktop Logout
+			userMenuLogoutBtn?.addEventListener('click', async () => {
+				await supabase.auth.signOut();
+				window.location.href = '/'; // Redirect after sign out
+			});
+
+			// Mobile Logout
 			mobileLogoutBtn?.addEventListener('click', async () => {
 				await supabase.auth.signOut();
-				window.location.href = '/';
+				window.location.href = '/'; // Redirect after sign out
 			});
-			
+
+			// Close Desktop Dropdown when clicking outside
+			document.addEventListener('click', (event) => {
+				if (!userMenuButton?.contains(event.target as Node) && !userMenuDropdown?.contains(event.target as Node)) {
+					userMenuDropdown?.classList.add('hidden');
+				}
+			});
+
+			// Avatar Error Handling (Desktop & Mobile)
+			const handleProfileImageError = (event: Event) => {
+				const imgElement = event.target as HTMLImageElement;
+				const parent = imgElement.parentElement;
+				if (parent) {
+					const displayName = imgElement.getAttribute('alt')?.replace("'s avatar", "") || 'User';
+					const initial = displayName.charAt(0).toUpperCase();
+					
+					// Hide broken image
+					imgElement.classList.add('hidden');
+
+					// Check if fallback already exists
+					let fallback = parent.querySelector('.avatar-fallback');
+					if (!fallback) {
+						fallback = document.createElement('div');
+						fallback.className = 'avatar-fallback h-8 w-8 rounded-full bg-gray-600 dark:bg-gray-700 text-white flex items-center justify-center font-mono';
+						// Insert after the img tag
+						parent.insertBefore(fallback, imgElement.nextSibling);
+					}
+					fallback.textContent = initial;
+				}
+			};
+
+			[userAvatarImg, mobileUserAvatarImg].forEach(img => {
+				if (img) {
+					img.removeEventListener('error', handleProfileImageError); // Remove previous listener if any
+					img.addEventListener('error', handleProfileImageError);
+				}
+			});
+
 			// Initial auth UI update
 			updateAuthUI();
 		</script>
@@ -197,7 +337,14 @@ const gaMeasurementIdExists = !!import.meta.env.PUBLIC_GA_MEASUREMENT_ID;
 	body {
 		display: flex;
 		flex-flow: column;
-	}	body > main {
+		background-color: #ffffff; /* Default light background */
+		color: #1f2937; /* Default light text (gray-800) */
+	}
+	.dark body {
+		background-color: #111827; /* Dark background (gray-900) */
+		color: #d1d5db; /* Dark text (gray-300) */
+	}
+	body > main {
 		flex: 1;
 	}
 	
@@ -210,34 +357,80 @@ const gaMeasurementIdExists = !!import.meta.env.PUBLIC_GA_MEASUREMENT_ID;
 		display: none;  /* Chrome, Safari and Opera */
 	}
 	.content-wrapper {
+        /* Apply FounderCard font styles globally within content */
+        /* Default text color for content elements */
+        color: #374151; /* gray-700 */
+
         :is(h2,h3,h4,h5,h6) {
-            font-weight: 600;
-            margin-top: 1ex;
+            font-family: monospace; /* Match FounderCard title */
+            font-weight: 700; /* Match FounderCard title (bold) */
+            margin-top: 1.5em; /* Increased top margin for headings */
+            margin-bottom: 0.5em;
+            color: #030000;
         }
-        p {
-            margin-top: 1ex;
+        p, li {
+            margin-top: 1em;
+            font-size: 1rem; /* Increased for better readability */
+            line-height: 1.625; /* Match FounderCard quote (leading-relaxed) */
+            /* Italic is excluded for general paragraphs/lists */
         }
         h2 {
-            font-size: 1.875rem;
+            font-size: 1.875rem; /* Keep hierarchy */
         }
         h3 {
-            font-size: 1.5rem;
+            font-size: 1.5rem; /* Keep hierarchy */
         }
         h4 {
-            font-size: 1.35rem;
+            font-size: 1.35rem; /* Keep hierarchy */
         }
         h5, h6 {
-            font-weight: 500;
-            font-size: 1.1rem;
+            /* font-weight: 700; Already set above */
+            font-size: 1.1rem; /* Keep hierarchy */
         }
-		ul {
-			list-style-type:square;
-			list-style-position: inside;
-			margin-top: 1ex;
-		}
-		pre {
-			margin-top: 1ex;
-			padding-block: 1.5rem;
-		}
-    }
-</style>
+  ul {
+   list-style-type: square;
+   list-style-position: inside;
+   padding-left: 1em; /* Add some padding for list items */
+  }
+        blockquote {
+            font-size: 0.875rem; /* Match FounderCard quote */
+            line-height: 1.625; /* Match FounderCard quote */
+            font-style: italic; /* Match FounderCard quote */
+            color: #6B7280; /* Default text color from dev-card */
+            border-left: 3px solid #8b5cf6; /* Match dev-card quote border */
+            padding-left: 1rem; /* Match dev-card quote padding */
+            margin-top: 1.5em;
+            margin-bottom: 1.5em;
+            margin-left: 1em;
+            margin-right: 1em;
+        }
+        /* Dark mode overrides for content elements */
+        .dark .content-wrapper {
+        	 color: #d1d5db; /* gray-300 */
+        }
+        .dark .content-wrapper blockquote {
+        	 color: #9CA3AF; /* Match dark mode dev-card text (gray-400) */
+        	 border-left-color: #a78bfa; /* Match dark mode dev-card quote border (violet-400) */
+        }
+        pre {
+         margin-top: 1ex;
+         padding-block: 1.5rem;
+        }
+          }
+      
+        /* Global style for inline code */
+        :not(pre) > code {
+          font-family: 'DM Mono', monospace; /* Ensure consistent mono font */
+          background-color: rgba(229, 231, 235, 0.5); /* gray-200 with opacity */
+          color: #b91c1c; /* A reddish tone for light mode */
+          padding: 0.15em 0.4em;
+          border-radius: 0.25rem;
+          font-size: 0.9em; /* Slightly smaller than surrounding text */
+          vertical-align: baseline;
+        }
+      
+        .dark :not(pre) > code {
+          background-color: rgba(55, 65, 81, 0.6); /* gray-700 with opacity */
+          color: #fca5a5; /* Lighter reddish tone for dark mode */
+        }
+      </style>

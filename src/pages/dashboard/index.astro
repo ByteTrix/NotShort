@@ -25,6 +25,8 @@ const { user } = authResult; // session is not used
 
 // Now session is guaranteed to be a non-null Session and user is guaranteed to be authenticated
 const userId = user.id; // Use the authenticated user from getUser() rather than from session
+const userMetadata = user.user_metadata;
+const displayName = userMetadata?.full_name || userMetadata?.name || user?.email?.split('@')[0] || 'User';
 
 // Get user's links
 // Note: Using the client-side `supabase` instance here.
@@ -57,7 +59,7 @@ const siteUrl = import.meta.env.SITE ;
   <!-- Welcome Header -->
   <div class="md:flex md:items-center md:justify-between">
     <div class="min-w-0 flex-1">      <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-white sm:truncate sm:text-3xl sm:tracking-tight">
-        Welcome back, {user?.email?.split('@')[0] || 'User'}!
+        Welcome back, {displayName}!
       </h2>
       <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
         Here's an overview of your unnecessarily long URLs

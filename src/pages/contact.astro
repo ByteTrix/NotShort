@@ -1,0 +1,24 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Section from '../components/Section.astro';
+---
+
+<Layout title="Contact Us - NotShort">
+  <Section>
+  <main class="container mx-auto max-w-2xl px-4 py-12 md:py-16"> {/* Added max-w-2xl, adjusted padding */}
+    <h2 class="text-3xl font-bold mb-8 text-center text-gray-800 dark:text-gray-200">Get In Touch!</h2> {/* Centered, adjusted margin */}
+    <p class="mb-8 text-center text-lg text-gray-600 dark:text-gray-400"> {/* Centered, adjusted margin/size */}
+      Got a burning question? A brilliant idea that will revolutionize long URLs? Or maybe you just spotted a typo only a hawk (or a very bored person) could see? Whatever it is, we're all ears (mostly).
+    </p>
+    <p class="mb-4 text-center text-gray-600 dark:text-gray-400">Here are the best ways to send your digital carrier pigeons:</p> {/* Added intro for list */}
+    <ul class="list-none text-center space-y-3 text-gray-700 dark:text-gray-300 mb-8"> {/* Centered list, adjusted spacing */}
+      <li>📧 Email: <a href="mailto:kavin@notshort.in" class="text-blue-600 hover:underline dark:text-blue-400">kavin@notshort.in</a> (For formal stuff, or if you like email)</li>
+      <li>🐦 Twitter: <a href="https://twitter.com/NotShort.in" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline dark:text-blue-400">@NotShort.in</a> (For quick chats and public declarations)</li>
+      <li>🐙 GitHub: <a href="https://github.com/itskavin" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline dark:text-blue-400">kavinthangavel</a> (For bug reports, feature requests, or code admiration)</li>
+    </ul>
+    <p class="mt-8 text-center text-gray-600 dark:text-gray-400"> {/* Centered, adjusted margin */}
+      We try to respond faster than a sloth on a coffee break, but sometimes we're busy making the internet unnecessarily longer. Bear with us!
+    </p>
+  </main>
+  </Section>
+</Layout>

@@ -27,7 +27,7 @@ const { Content } = await post.render();
 ---
 <Layout title={post.data.title}>
     <Header>
-        <a class="absolute top-0 left-0 px-4 py-2.5 border-1 border-t-0 border-l-0 border-gray-200 dark:border-gray-800 hover:bg-gray-900 hover:c-gray-200 transition" href="/blog">Return to blog</a>
+        <a class="absolute top-0 left-0 px-4 py-2.5 border-1 border-t-0 border-l-0 border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-900 hover:c-gray-200 dark:hover:bg-gray-100 dark:hover:text-gray-900 transition" href="/blog">Return to blog</a>
         <h1 class="text-20 leading-20">{post.data.title}</h1>
         {post.data.description && <p>{post.data.description}</p>}
         <FormattedDate date={new Date(post.data.pubDate)} />

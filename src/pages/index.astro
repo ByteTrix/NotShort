@@ -265,6 +265,20 @@ const contributorsPageUrl = `${getRepoUrl()}/graphs/contributors`;
   --transition-smooth: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
+/* Dark mode variable overrides */
+.dark {
+  --primary-gradient: linear-gradient(135deg, #1F2937 0%, #374151 100%); /* Darker gradient */
+  --reverse-gradient: linear-gradient(135deg, #374151 0%, #1F2937 100%);
+  --accent-color: #E5E7EB; /* Light gray for dark mode accent */
+  --accent-light: #4B5563; /* Darker gray */
+  --accent-lighter: #374151; /* Even darker gray */
+  --success-color: #10B981; /* Brighter green */
+  --success-bg: rgba(16, 185, 129, 0.15);
+  --success-border: rgba(16, 185, 129, 0.4);
+  --card-shadow: 0 6px 24px -8px rgba(255, 255, 255, 0.08); /* Lighter shadow */
+  --card-hover-shadow: 0 12px 32px -4px rgba(255, 255, 255, 0.12);
+}
+
 /* Enhanced smooth animations and transitions */
 .animate-fade-in { 
   animation: fadeIn 0.8s cubic-bezier(0.23, 1, 0.32, 1) both; 
@@ -386,6 +400,27 @@ const contributorsPageUrl = `${getRepoUrl()}/graphs/contributors`;
   z-index: 1;
 }
 
+/* Dark mode overrides for longify-btn */
+.dark .longify-btn {
+  color: #1F2937; /* Dark text */
+  background-color: #D1D5DB; /* Light gray background */
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+}
+
+.dark .longify-btn:hover {
+  color: #111827; /* Darker text on hover */
+  box-shadow: 0 6px 20px rgba(209, 213, 219, 0.2);
+}
+
+/* Keep the gradient effect, but use the dark gradient */
+.dark .longify-btn::before {
+   background: var(--primary-gradient); /* Uses the dark gradient */
+}
+
+.dark .longify-btn:hover::before {
+   /* The transform effect remains the same */
+}
+
 /* Premium button with enhanced monochrome styling */
 .premium-btn {
   font-size: 1.15rem;
@@ -452,6 +487,35 @@ const contributorsPageUrl = `${getRepoUrl()}/graphs/contributors`;
 .premium-btn:active {
   transform: translateY(1px);
   box-shadow: 0 2px 8px 0 rgba(139, 92, 246, 0.2);
+}
+
+/* Dark mode overrides for premium-btn */
+.dark .premium-btn {
+  background: #E5E7EB; /* Light background */
+  color: #111827; /* Black text */
+  box-shadow: 0 4px 16px 0 rgba(255, 255, 255, 0.15);
+}
+
+.dark .premium-btn::before {
+  background: #60A5FA; /* Lighter blue hover */
+}
+
+.dark .premium-btn:hover {
+  color: #111827; /* Keep text black on hover */
+  box-shadow: 0 8px 25px rgba(96, 165, 250, 0.3);
+}
+
+.dark .premium-btn:hover::after {
+   /* Shimmer effect might need adjustment if too subtle/harsh on light bg */
+   background: linear-gradient(90deg,
+    rgba(55, 65, 81, 0) 0%,
+    rgba(55, 65, 81, 0.2) 50%,
+    rgba(55, 65, 81, 0) 100%
+  );
+}
+
+.dark .premium-btn:active {
+  box-shadow: 0 2px 8px 0 rgba(96, 165, 250, 0.2);
 }
 
 /* Enhanced stats section */
@@ -580,6 +644,23 @@ const contributorsPageUrl = `${getRepoUrl()}/graphs/contributors`;
   text-transform: uppercase;
 }
 
+/* Dark mode overrides for tiny-live-pill */
+.dark .tiny-live-pill {
+  color: var(--success-color); /* Uses dark mode variable */
+  background: var(--success-bg); /* Uses dark mode variable */
+  border-color: var(--success-border); /* Uses dark mode variable */
+  box-shadow: 0 2px 6px 0 rgba(16, 185, 129, 0.18);
+}
+
+.dark .tiny-dot {
+  background: var(--success-color); /* Uses dark mode variable */
+  /* Pulse animation color is implicitly handled by variable */
+}
+
+.dark .tiny-live-label {
+  color: var(--success-color); /* Uses dark mode variable */
+}
+
 /* Enhanced contributor avatars */
 .contributors-avatars {
   margin-top: 2.5em;
@@ -646,6 +727,13 @@ const contributorsPageUrl = `${getRepoUrl()}/graphs/contributors`;
   opacity: 1;
   bottom: -35px;
   transform: translateX(-50%);
+}
+
+/* Dark mode overrides for contributor-name tooltip */
+.dark .contributor-name {
+  background: rgba(229, 231, 235, 0.85); /* Lighter background */
+  color: #111827; /* Dark text */
+  box-shadow: 0 2px 6px rgba(255, 255, 255, 0.15);
 }
 
 @media (max-width: 768px) {
@@ -738,10 +826,10 @@ const contributorsPageUrl = `${getRepoUrl()}/graphs/contributors`;
   width: 100%;
 }
 
-.dark .feature-card {
-  background: rgba(17, 24, 39, 0.9);
-  border: 1px solid rgba(55, 65, 81, 1);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+html.dark .feature-card { /* Increased selector specificity */
+  background: rgb(17, 24, 39) !important;
+  border: 1px solid rgba(55, 65, 81, 1) !important; /* Added !important */
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2) !important; /* Added !important */
 }
 
 .feature-card::before {

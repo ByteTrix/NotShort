@@ -1,12 +1,26 @@
 ---
 import { SITE_NAME } from '../consts';
+import { getRepoUrl } from '../lib/github'; // Import the function
 const now = new Date();
 const formatter = new Intl.DateTimeFormat('en-US', { year: 'numeric' });
+const repoUrl = getRepoUrl(); // Get the repo URL
 ---
-<footer class="font-sans border-t border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300">
-    <div class="xl:max-w-[1120px] mx-auto flex items-center justify-center space-x-4 py-12 px-4 sm:px-6 lg:px-8 text-sm">
-        <span>&copy; {formatter.format(now)} {SITE_NAME}</span>
-        <span>&mdash;</span>
-        <span>Made with 🖤 in 🇮🇳</span>
+<footer class="font-sans border-t border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800">
+    <div class="xl:max-w-[1120px] mx-auto flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0 py-12 px-4 sm:px-6 lg:px-8 text-sm">
+        <div class="flex items-center space-x-4">
+            <span>&copy; {formatter.format(now)} {SITE_NAME}</span>
+            <span>&mdash;</span>
+            <span>Made with <span class="dark:hidden">🖤</span><span class="hidden dark:inline">🤍</span> in 🇮🇳</span>
+        </div>
+        <nav>
+            <ul class="flex space-x-4">
+                <li><a href="/" class="hover:underline dark:text-gray-300 dark:hover:underline">Home</a></li>
+                <li><a href="/about" class="hover:underline dark:text-gray-300 dark:hover:underline">About</a></li>
+                <li><a href="/blog" class="hover:underline dark:text-gray-300 dark:hover:underline">Blog</a></li>
+                <li><a href="/contact" class="hover:underline dark:text-gray-300 dark:hover:underline">Contact</a></li>
+                <li><a href="/privacy-policy" class="hover:underline dark:text-gray-300 dark:hover:underline">Privacy</a></li>
+                {repoUrl && <li><a href={repoUrl} target="_blank" rel="noopener noreferrer" class="hover:underline dark:text-gray-300 dark:hover:underline">GitHub</a></li>}
+            </ul>
+        </nav>
     </div>
 </footer>
