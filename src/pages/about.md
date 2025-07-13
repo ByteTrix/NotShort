@@ -257,25 +257,25 @@ layout: ../layouts/AboutLayout.astro
 </style>
 
 
-Hey there! I'm **Kavin T**, a BTech IT graduate with too much time and not enough common sense. During what should have been a relaxing holiday break, my brain decided that what the internet really needed was the exact opposite of a URL shortener. Because why make things more efficient when you can make them hilariously complex?
+Hey there! I'm **Kavin**, a BTech IT graduate with too much time and not enough common sense. During what should have been a relaxing holiday break, my brain decided that what the internet really needed was the exact opposite of a URL shortener. Because why make things more efficient when you can make them hilariously complex?
 
 ## The Dream Team
 
 <div class="dev-section">
   <div class="dev-card">
     <div class="dev-avatar-wrapper">
-      <img src="https://github.com/itskavin.png" alt="Kavin T Avatar" class="dev-avatar" />
+      <img src="https://github.com/itskavin.png" alt="Kavin Avatar" class="dev-avatar" />
     </div>
-    <h3>Kavin T</h3>
+    <h3>Kavin</h3>
     <p class="role">Chief Elongation Officer (CEO)</p>
     <p>" That's me! I built this absurdity during what was supposed to be a boring holiday. Instead of catching up on sleep or touching grass, I decided to create a service that literally nobody asked for.</br> You're welcome, internet! " </p>
   </div>
 
   <div class="dev-card">
      <div class="dev-avatar-wrapper">
-      <img src="https://github.com/zomb56.png" alt="Gowtham S Avatar" class="dev-avatar" />
+      <img src="https://github.com/zomb56.png" alt="Gowtham Avatar" class="dev-avatar" />
     </div>
-    <h3>Gowtham S</h3>
+    <h3>Gowtham</h3>
     <p class="role">Chief Umm.. Officer (CUO)</p>
     <p>" My classmate and unwilling accomplice who, despite not being a tech enthusiast, provided invaluable help with template searching, URL longification logic, and design feedback ("No da, that shade of neon green will literally blind users").. "</p>
     <p class="quote">"Thanks da!" - Me to Gowtham, constantly</p>
