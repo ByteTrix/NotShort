@@ -1,0 +1,52 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Section from '../components/Section.astro';
+---
+
+<Layout title="Privacy Policy - NotShort">
+  <Section>
+    <div class="max-w-3xl mx-auto px-4 py-12 md:py-16"> {/* Added container and padding */}
+      <h2 class="text-3xl font-bold mb-8 text-center text-gray-800 dark:text-gray-200">Our Super Secret (Not Really) Privacy Policy</h2>
+
+      <p class="mb-8 text-lg text-center text-gray-600 dark:text-gray-400">
+        Look, we're in the business of making URLs ridiculously long, not snooping around your digital life. But legally, we gotta tell you some stuff. So grab a coffee (or tea, we don't judge), and let's get through this together.
+      </p>
+
+      <div class="space-y-8"> {/* Added spacing between sections */}
+        <div>
+          <h3 class="text-2xl font-semibold mb-3 text-gray-700 dark:text-gray-300">What We Gently Borrow (Collect)</h3>
+          <p class="mb-3 text-gray-600 dark:text-gray-400">To make the magic happen (and keep the lights on), we need a tiny bit of info:</p>
+          <ul class="list-disc list-inside space-y-2 text-gray-600 dark:text-gray-400 pl-4">
+            <li><strong class="text-gray-700 dark:text-gray-300">Your Email:</strong> Only if you sign up! We need it so you can log in and manage your gloriously long links. We promise not to spam you with cat pictures (unless you ask nicely).</li>
+            <li><strong class="text-gray-700 dark:text-gray-300">The URLs You Longify:</strong> We store the original URL and the super-long one we create. Kinda essential for the service to, you know, work.</li>
+            <li><strong class="text-gray-700 dark:text-gray-300">Basic Usage Stats (Anonymously!):</strong> Things like how many links are created or clicked. This helps us figure out if people actually like this thing or if we should pivot to selling artisanal toast. It's all anonymous, like a superhero's secret identity.</li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="text-2xl font-semibold mb-3 text-gray-700 dark:text-gray-300">Why We Borrow It (How We Use It)</h3>
+          <p class="mb-3 text-gray-600 dark:text-gray-400">We're not building an evil empire (promise!). We use this info to:</p>
+          <ul class="list-disc list-inside space-y-2 text-gray-600 dark:text-gray-400 pl-4">
+            <li><strong class="text-gray-700 dark:text-gray-300">Run the Service:</strong> Let you log in, see your links, and generally use NotShort.</li>
+            <li><strong class="text-gray-700 dark:text-gray-300">Make NotShort Better:</strong> Those anonymous stats help us fix bugs and maybe add features people actually want.</li>
+            <li><strong class="text-gray-700 dark:text-gray-300">Stop Shenanigans:</strong> Prevent bots and other mischief-makers from ruining the fun for everyone.</li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="text-2xl font-semibold mb-3 text-gray-700 dark:text-gray-300">Things We Absolutely Pinky-Promise Not To Do</h3>
+          <p class="mb-3 text-gray-600 dark:text-gray-400">Your data is yours. We treat it with respect (and maybe a little awe). We will NOT:</p>
+          <ul class="list-disc list-inside space-y-2 text-gray-600 dark:text-gray-400 pl-4">
+            <li><strong class="text-gray-700 dark:text-gray-300">Sell Your Data:</strong> Never. Ever. Not even for a lifetime supply of pizza.</li>
+            <li><strong class="text-gray-700 dark:text-gray-300">Track You Across the Web:</strong> We're not interested in what other weird corners of the internet you visit. That's your business.</li>
+            <li><strong class="text-gray-700 dark:text-gray-300">Share Your Info (Unless Forced):</strong> We won't share your personal info with random third parties. The only exception is if the law (like, actual law enforcement with warrants) makes us.</li>
+          </ul>
+        </div>
+      </div>
+
+      <p class="mt-12 text-center text-lg italic text-gray-600 dark:text-gray-400">
+        Bottom line: We just want to make URLs unnecessarily long and have a bit of fun. Your privacy is safe with us. Now go forth and longify!
+      </p>
+    </div>
+  </Section>
+</Layout>

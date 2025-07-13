@@ -6,7 +6,7 @@ import vercel from '@astrojs/vercel';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://thekavin.com', // User should update this later with their actual production domain
+  site: 'https://lg.thekavin.com', // User should update this later with their actual production domain
   output: "server",
   adapter: vercel({}),
   integrations: [Unocss({ injectReset: true, injectEntry: true }), icon()]

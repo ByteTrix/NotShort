@@ -9,17 +9,173 @@ if (modes.indexOf(activeMode as string) === -1) {
     activeMode = modes[0];
 }
 ---
-<button data-c="modeToggle" data-mode={activeMode} class:list={[activeMode]}>
-    <span class="dark:hidden light:block">☀️</span>
-    <span class="dark:block light:hidden">🌙</span>
+<button data-c="modeToggle" data-mode={activeMode} class:list={[activeMode]} aria-label="Toggle theme">
+    <span class="icon sun">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+    </span>
+    <span class="knob"></span>
+    <span class="icon moon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+    </span>
 </button>
-<script>
-    document.addEventListener('click', ({ target }) => {
-        const btn = (target as HTMLElement).closest('[data-c="modeToggle"]');
-        if (!btn) return;
 
-        btn.classList.toggle('light', !btn.classList.contains('light'));
-        btn.classList.toggle('dark', !btn.classList.contains('dark'));
-        // Astro.cookies.set('mode',)
-    })
+<style>
+  button[data-c="modeToggle"] {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    width: 60px; /* Increased width to accommodate icons */
+    height: 30px; /* Increased height slightly */
+    background-color: #e2e8f0; /* Light mode track (Tailwind gray-200) */
+    border-radius: 9999px; /* Fully rounded */
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+    padding: 0;
+    overflow: hidden;
+    vertical-align: middle; /* Align better with text if needed */
+  }
+
+  .knob {
+    position: absolute;
+    top: 2px; /* Adjusted for new height */
+    left: 3px;
+    width: 26px; /* Adjusted for new height */
+    height: 26px; /* Adjusted for new height */
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.2s ease-in-out;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  }
+
+  /* Dark mode styles */
+  /* Using :global(.dark) to target the class on <html> for track color */
+  :global(.dark) button[data-c="modeToggle"] {
+     background-color: #4a5568; /* Dark mode track (Tailwind gray-600) */
+  }
+
+  /* Use the class on the button itself for knob position */
+  button[data-c="modeToggle"].dark .knob {
+    transform: translateX(29px); /* Move knob: width - knob_width - left_padding - icon_width_approx = 60 - 26 - 3 - 2 = 29*/
+  }
+
+  .icon {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #4a5568; /* Default icon color (gray-600) */
+    transition: opacity 0.2s ease-in-out;
+  }
+
+  .sun {
+    left: 6px; /* Position sun icon */
+    opacity: 0;
+  }
+
+  .moon {
+    right: 6px; /* Position moon icon */
+    opacity: 1;
+  }
+
+  button[data-c="modeToggle"].dark .sun {
+    opacity: 1;
+    color: #f0e68c; /* Sun color in dark mode */
+  }
+  button[data-c="modeToggle"].dark .moon {
+    opacity: 0;
+  }
+
+  button[data-c="modeToggle"].light .sun {
+    opacity: 1;
+     color: #f59e0b; /* Sun color in light mode - Tailwind amber-500 */
+  }
+
+  button[data-c="modeToggle"].light .moon {
+    opacity: 0;
+  }
+  
+  /* Adjust knob color for dark mode if needed, or keep it white */
+   :global(.dark) button[data-c="modeToggle"].dark .knob {
+    /* background-color: #2d3748; */ /* Example: Darker knob (gray-800) */
+  }
+
+
+  /* Optional: Focus ring for accessibility */
+  button[data-c="modeToggle"]:focus-visible {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5); /* Example focus ring */
+  }
+
+</style>
+
+<script>
+	// Determine the initial theme
+	let initialTheme: 'light' | 'dark';
+	if (typeof localStorage !== 'undefined') {
+		const storedTheme = localStorage.getItem('theme');
+		if (storedTheme === 'light' || storedTheme === 'dark') {
+			initialTheme = storedTheme;
+		} else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+			initialTheme = 'dark';
+		} else {
+			initialTheme = 'light';
+		}
+	} else {
+		// Fallback if localStorage is not available (e.g., SSR or specific browser settings)
+		initialTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+	}
+
+	// Apply the initial theme class to <html>
+	if (initialTheme === 'light') {
+		document.documentElement.classList.remove('dark');
+	} else {
+		document.documentElement.classList.add('dark');
+	}
+
+	// Store the determined theme (ensuring it's always 'light' or 'dark')
+	if (typeof localStorage !== 'undefined') {
+		window.localStorage.setItem('theme', initialTheme);
+	}
+
+	const handleToggleClick = () => {
+		const element = document.documentElement;
+		element.classList.toggle("dark");
+
+		const isDark = element.classList.contains("dark");
+		localStorage.setItem("theme", isDark ? "dark" : "light");
+
+        // Also update button state visually within the click handler
+        const toggleButton = document.querySelector('[data-c="modeToggle"]');
+        if (toggleButton) {
+            const isDarkNow = document.documentElement.classList.contains('dark');
+            toggleButton.classList.toggle('dark', isDarkNow);
+            toggleButton.classList.toggle('light', !isDarkNow);
+            // Update data-mode attribute if needed elsewhere, though class is used for styling
+            toggleButton.setAttribute('data-mode', isDarkNow ? 'dark' : 'light');
+        }
+	}
+
+	// Attach event listener to the button
+	const toggleButton = document.querySelector('[data-c="modeToggle"]');
+	toggleButton?.addEventListener('click', handleToggleClick);
+
+	// Sync button state visually on load
+	if (toggleButton) {
+		// Use initialTheme for the button sync logic as well
+		if (initialTheme === 'dark') {
+			toggleButton.classList.add('dark');
+			toggleButton.classList.remove('light');
+            toggleButton.setAttribute('data-mode', 'dark');
+		} else {
+			toggleButton.classList.add('light');
+			toggleButton.classList.remove('dark');
+            toggleButton.setAttribute('data-mode', 'light');
+		}
+	}
+
+    // Removed the redundant document-level click listener as logic is now in handleToggleClick
 </script>

@@ -19,7 +19,7 @@ export default defineConfig({
       scale: 1.2,
       warn: true,
     }),
-    presetTypography(),
+    presetTypography(), // Revert to original
     presetWebFonts({ // Optional: if web fonts are desired
       fonts: {
         sans: 'DM Sans',
@@ -28,6 +28,26 @@ export default defineConfig({
       },
     }),
   ],
+theme: {
+    extend: {
+      typography: {
+        // Define custom typography styles
+        DEFAULT: {
+          css: {
+            // Base styles if needed
+          },
+        },
+        // Target dark mode specifically for prose elements
+        invert: {
+          css: {
+            '--un-prose-headings': 'white', // Force headings to white in dark mode
+            // You can add other dark mode overrides here if necessary
+            // e.g., '--un-prose-invert-body': '#your-dark-body-color',
+          },
+        },
+      },
+    },
+  },
   transformers: [
     transformerDirectives(),
     transformerVariantGroup(),
