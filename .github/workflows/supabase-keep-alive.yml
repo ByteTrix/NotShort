@@ -1,0 +1,23 @@
+name: Supabase Keep-Alive
+
+on:
+  schedule:
+    # Run once daily at 12:00 UTC (keeps database active without excessive pings)
+    - cron: '0 12 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    if: vars.ENABLE_KEEP_ALIVE == 'true'
+    
+    steps:
+      - name: Ping Supabase Edge Function
+        run: |
+          curl -X POST \
+            -H "Content-Type: application/json" \
+            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            ${{ secrets.SUPABASE_URL }}/functions/v1/get-user-count
+          
+          echo "✅ Keep-alive ping successful at $(date)"
