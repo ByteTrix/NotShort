@@ -322,7 +322,7 @@ We're using Supabase's free plan right now, which has some limits. If more peopl
 <div class="donate-banner">
   <h3>💰 Help Keep NotShort Running! 💰</h3>
   <p>So far, I've only spent my time and paid for the domain name. If you enjoy making super long URLs, please think about donating!</p>
-  <a href="#donate" class="donate-button">Donate Now</a>
+  <a href="https://ko-fi.com/itskavin" class="donate-button">Donate Now</a>
 </div>
 
 ## Want the Full Story?
