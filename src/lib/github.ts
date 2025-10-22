@@ -3,7 +3,7 @@
  */
 
 // GitHub API URLs
-const REPO_OWNER = 'itskavin';
+const REPO_OWNER = 'bytetrix';
 const REPO_NAME = 'NotShort';
 const REPO_API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}`;
 
