@@ -116,3 +116,24 @@ BEGIN
   ORDER BY l.created_at DESC;
 END;
 $$;
+
+-- Create app_metrics table for storing application-level metrics
+CREATE TABLE IF NOT EXISTS public.app_metrics (
+  metric_name TEXT PRIMARY KEY,
+  metric_value INTEGER NOT NULL DEFAULT 0,
+  last_updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
+);
+
+-- Insert initial metric for total_user_count
+INSERT INTO public.app_metrics (metric_name, metric_value, last_updated_at)
+VALUES ('total_user_count', 0, TIMEZONE('utc', NOW()))
+ON CONFLICT (metric_name) DO NOTHING;
+
+-- Enable RLS on app_metrics (read-only for everyone, no writes via API)
+ALTER TABLE public.app_metrics ENABLE ROW LEVEL SECURITY;
+
+-- Allow anyone to read app_metrics
+CREATE POLICY "App metrics are viewable by everyone" 
+  ON public.app_metrics
+  FOR SELECT
+  USING (true);
